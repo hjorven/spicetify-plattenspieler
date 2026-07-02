@@ -103,6 +103,9 @@ function RecordPlayer() {
 
     var u1 = Spicetify.Player.addEventListener('songchange', function() {
       savedProgress = 0;
+      analyserRef.current = null;
+      analyserTries.current = 0;
+      vuDataRef.current = { l: 0, r: 0, pl: 0, pr: 0 };
       update();
     });
     var u2 = Spicetify.Player.addEventListener('onplaypause', function(e) {
@@ -126,11 +129,12 @@ function RecordPlayer() {
     };
   }, []);
 
-  /* ── VU meter loop (only when playing) ── */
+  /* ── VU meter loop (playing → live, paused → decay to 0) ── */
   useEffect(function() {
-    if (!state.isPlaying || !state.hasTrack) return;
+    if (!state.hasTrack) return;
 
     var vuId, lastVu = 0, vuBuf = null;
+    var active = state.isPlaying;
 
     function findAnalyser() {
       try {
@@ -159,33 +163,45 @@ function RecordPlayer() {
     function loop(time) {
       vuId = requestAnimationFrame(loop);
       try {
-        var a = getAnalyser();
-        var lvlL, lvlR;
-
-        if (a && a.frequencyBinCount) {
-          if (!vuBuf || vuBuf.length !== a.frequencyBinCount) vuBuf = new Uint8Array(a.frequencyBinCount);
-          try { a.getByteFrequencyData(vuBuf); } catch(e) { try { a.getByteTimeDomainData(vuBuf); } catch(e2) { return; } }
-          var half = vuBuf.length >> 1;
-          var sumL = 0, sumR = 0;
-          for (var i = 0; i < half; i++) sumL += vuBuf[i];
-          for (var i = half; i < vuBuf.length; i++) sumR += vuBuf[i];
-          lvlL = Math.min(1, sumL / half / 255 * 1.5);
-          lvlR = Math.min(1, sumR / half / 255 * 1.5);
-        } else {
-          var t = time * 0.001;
-          var beat = (t % (0.4 + (t * 0.01) % 0.3)) / (0.4 + (t * 0.01) % 0.3);
-          var energy = Math.sin(beat * Math.PI);
-          lvlL = 0.08 + energy * 0.55 + Math.sin(t * 3.1) * 0.08 + (1 - energy) * Math.random() * 0.12;
-          lvlR = 0.08 + energy * 0.5 + Math.sin(t * 2.8 + 0.7) * 0.08 + (1 - energy) * Math.random() * 0.12;
-        }
-
         var v = vuDataRef.current;
-        v.l = Math.max(Math.min(lvlL, 1), v.l * 0.92);
-        v.r = Math.max(Math.min(lvlR, 1), v.r * 0.92);
-        v.pl = Math.max(v.pl, v.l);
-        v.pr = Math.max(v.pr, v.r);
-        v.pl *= 0.997;
-        v.pr *= 0.997;
+
+        if (active) {
+          var a = getAnalyser();
+          var lvlL, lvlR;
+
+          if (a && a.frequencyBinCount) {
+            if (!vuBuf || vuBuf.length !== a.frequencyBinCount) vuBuf = new Uint8Array(a.frequencyBinCount);
+            try { a.getByteFrequencyData(vuBuf); } catch(e) { try { a.getByteTimeDomainData(vuBuf); } catch(e2) { return; } }
+            var half = vuBuf.length >> 1;
+            var sumL = 0, sumR = 0;
+            for (var i = 0; i < half; i++) sumL += vuBuf[i];
+            for (var i = half; i < vuBuf.length; i++) sumR += vuBuf[i];
+            lvlL = Math.min(1, sumL / half / 255 * 1.5);
+            lvlR = Math.min(1, sumR / half / 255 * 1.5);
+          } else {
+            var t = time * 0.001;
+            var beat = (t % (0.4 + (t * 0.01) % 0.3)) / (0.4 + (t * 0.01) % 0.3);
+            var energy = Math.sin(beat * Math.PI);
+            lvlL = 0.08 + energy * 0.55 + Math.sin(t * 3.1) * 0.08 + (1 - energy) * Math.random() * 0.12;
+            lvlR = 0.08 + energy * 0.5 + Math.sin(t * 2.8 + 0.7) * 0.08 + (1 - energy) * Math.random() * 0.12;
+          }
+
+          v.l = Math.max(Math.min(lvlL, 1), v.l * 0.92);
+          v.r = Math.max(Math.min(lvlR, 1), v.r * 0.92);
+          v.pl = Math.max(v.pl, v.l);
+          v.pr = Math.max(v.pr, v.r);
+        } else {
+          v.l *= 0.88;
+          v.r *= 0.88;
+          v.pl *= 0.995;
+          v.pr *= 0.995;
+          if (v.l < 0.005 && v.r < 0.005 && v.pl < 0.005 && v.pr < 0.005) {
+            v.l = v.r = v.pl = v.pr = 0;
+            setVuData({ l: 0, r: 0, pl: 0, pr: 0 });
+            cancelAnimationFrame(vuId);
+            return;
+          }
+        }
 
         if (time - lastVu > 50) {
           lastVu = time;
