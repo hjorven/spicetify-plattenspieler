@@ -10,72 +10,60 @@ const { createElement: el } = React;
 function formatTime(ms) {
   if (!ms && ms !== 0) return '0:00';
   const s = Math.floor(ms / 1000);
-  return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  return Math.floor(s / 60) + ':' + (s % 60).toString().padStart(2, '0');
 }
 
-const REST_ANGLE = 80;
+var REST_ANGLE = 80;
 var savedProgress = 0;
 
 function RecordPlayer() {
-  const turntableRef = useRef(null);
-  const vuRef = useRef({ l: 0, r: 0, pl: 0, pr: 0 });
-  const isPlayingRef = useRef(false);
+  var turntableRef = useRef(null);
+  var vuDataRef = useRef({ l: 0, r: 0, pl: 0, pr: 0 });
+  var analyserRef = useRef(null);
+  var analyserTries = useRef(0);
 
-  const [vuData, setVuData] = useState({ l: 0, r: 0, pl: 0, pr: 0 });
-  const [theme, setTheme] = useState(localStorage.getItem('plattenspieler-theme') || 'modern');
+  var [vuData, setVuData] = useState({ l: 0, r: 0, pl: 0, pr: 0 });
+  var [theme, setTheme] = useState(localStorage.getItem('plattenspieler-theme') || 'modern');
   function changeTheme(t) {
     localStorage.setItem('plattenspieler-theme', t);
     setTheme(t);
   }
-  const [state, setState] = useState({
-    albumArt: '',
-    trackName: '',
-    artistName: '',
-    isPlaying: false,
-    progress: 0,
-    currentTime: 0,
-    duration: 0,
-    hasTrack: false,
+  var [state, setState] = useState({
+    albumArt: '', trackName: '', artistName: '',
+    isPlaying: false, progress: 0, currentTime: 0, duration: 0, hasTrack: false,
   });
-  const [geom, setGeom] = useState({
-    pivotX: 280,
-    pivotY: 90,
-    recordRadius: 140,
-    baseAngle: 120,
-    maxAngle: 145,
-  });
+  var [geom, setGeom] = useState({ pivotX: 280, pivotY: 90, recordRadius: 140, baseAngle: 120, maxAngle: 145 });
 
-  useEffect(() => {
+  /* ── geometry recalculation (throttled via RAF) ── */
+  useEffect(function() {
+    var rafId;
     function recalc() {
-      const tt = turntableRef.current;
-      if (!tt) return;
-      const rect = tt.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      const vw = window.innerWidth;
-
-      const recordWidth = Math.min(320, vw * 0.55);
-      const recordRadius = recordWidth / 2;
-      const centerX = w * 0.36;
-      const centerY = h * 0.50;
-      const pivotX = w * 0.36 + recordRadius + 12;
-      const pivotY = h * 0.18 + 20;
-
-      const dx = centerX - pivotX;
-      const dy = centerY - pivotY;
-      const angleToCenter = Math.atan2(dy, dx) * (180 / Math.PI);
-      const outerAngle = angleToCenter - 35;
-      const innerAngle = angleToCenter - 2;
-
-      setGeom({ pivotX, pivotY, recordRadius, baseAngle: outerAngle, maxAngle: innerAngle });
+      if (rafId) return;
+      rafId = requestAnimationFrame(function() {
+        rafId = null;
+        var tt = turntableRef.current;
+        if (!tt) return;
+        var rect = tt.getBoundingClientRect();
+        var w = rect.width, h = rect.height, vw = window.innerWidth;
+        var recordWidth = Math.min(320, vw * 0.55);
+        var recordRadius = recordWidth / 2;
+        var centerX = w * 0.36, centerY = h * 0.50;
+        var pivotX = w * 0.36 + recordRadius + 12, pivotY = h * 0.18 + 20;
+        var dx = centerX - pivotX, dy = centerY - pivotY;
+        var angleToCenter = Math.atan2(dy, dx) * (180 / Math.PI);
+        setGeom({ pivotX: pivotX, pivotY: pivotY, recordRadius: recordRadius, baseAngle: angleToCenter - 35, maxAngle: angleToCenter - 2 });
+      });
     }
-
     recalc();
-    const ro = new ResizeObserver(recalc);
-    if (turntableRef.current) ro.observe(turntableRef.current);
-    return () => ro.disconnect();
+    var ro = new ResizeObserver(recalc);
+    ro.observe(turntableRef.current);
+    return function() {
+      if (rafId) cancelAnimationFrame(rafId);
+      ro.disconnect();
+    };
   }, []);
 
+  /* ── player events ── */
   useEffect(function() {
     function readPlayer() {
       try {
@@ -91,7 +79,6 @@ function RecordPlayer() {
           isPlaying: data.is_playing || data.isPlaying || false,
           duration: data.duration || 0,
           position: data.position || 0,
-          hasTrack: true,
         };
       } catch(e) { return null; }
     }
@@ -101,19 +88,13 @@ function RecordPlayer() {
       if (info) {
         var p = info.duration > 0 ? info.position / info.duration : 0;
         if (p > 0 || savedProgress === 0) savedProgress = p;
-        isPlayingRef.current = info.isPlaying;
         setState({
-          albumArt: info.albumArt,
-          trackName: info.trackName,
-          artistName: info.artistName,
-          isPlaying: info.isPlaying,
-          progress: savedProgress,
+          albumArt: info.albumArt, trackName: info.trackName, artistName: info.artistName,
+          isPlaying: info.isPlaying, progress: savedProgress,
           currentTime: Math.round(savedProgress * info.duration),
-          duration: info.duration,
-          hasTrack: true,
+          duration: info.duration, hasTrack: true,
         });
       } else {
-        isPlayingRef.current = false;
         setState(function(p) { return { ...p, hasTrack: false }; });
       }
     }
@@ -126,7 +107,6 @@ function RecordPlayer() {
     });
     var u2 = Spicetify.Player.addEventListener('onplaypause', function(e) {
       var playing = e.data && !e.data.is_paused;
-      isPlayingRef.current = playing;
       setState(function(p) { return { ...p, isPlaying: playing, hasTrack: p.hasTrack || true }; });
       if (playing) update();
     });
@@ -135,50 +115,60 @@ function RecordPlayer() {
       if (d && d.duration > 0) {
         var p = e.data / d.duration;
         savedProgress = p;
-        isPlayingRef.current = true;
         setState(function(s) { return { ...s, currentTime: e.data, progress: p, hasTrack: true, isPlaying: true }; });
       }
     });
 
-    var vuId;
-    var lastVu = 0;
-    var vuAnalyser = null;
-    var vuTries = 0;
+    return function() {
+      if (u1) u1();
+      if (u2) u2();
+      if (u3) u3();
+    };
+  }, []);
+
+  /* ── VU meter loop (only when playing) ── */
+  useEffect(function() {
+    if (!state.isPlaying || !state.hasTrack) return;
+
+    var vuId, lastVu = 0, vuBuf = null;
 
     function findAnalyser() {
       try {
         var p = Spicetify && Spicetify.Player;
         if (!p) return null;
-        var candidates = ['analyser', '_analyser', 'audioAnalyser', '_audioAnalyser'];
-        for (var i = 0; i < candidates.length; i++) {
-          if (p[candidates[i]] && p[candidates[i]].frequencyBinCount) return p[candidates[i]];
+        var names = ['analyser', '_analyser', 'audioAnalyser', '_audioAnalyser'];
+        for (var i = 0; i < names.length; i++) {
+          if (p[names[i]] && p[names[i]].frequencyBinCount) return p[names[i]];
         }
-        return null;
-      } catch(e) { return null; }
+      } catch(e) {}
+      return null;
     }
 
-    function vuLoop(time) {
-      vuId = requestAnimationFrame(vuLoop);
-      try {
-        if (!isPlayingRef.current) return;
-
-        var a = vuAnalyser;
-        if (!a) {
-          vuTries++;
-          if (vuTries < 600 || (vuTries % 1200) === 0) {
-            vuAnalyser = findAnalyser();
-            a = vuAnalyser;
-          }
+    function getAnalyser() {
+      var a = analyserRef.current;
+      if (!a) {
+        analyserTries.current++;
+        if (analyserTries.current < 600 || (analyserTries.current % 1200) === 0) {
+          a = findAnalyser();
+          analyserRef.current = a;
         }
+      }
+      return a;
+    }
 
+    function loop(time) {
+      vuId = requestAnimationFrame(loop);
+      try {
+        var a = getAnalyser();
         var lvlL, lvlR;
+
         if (a && a.frequencyBinCount) {
-          var arr = new Uint8Array(a.frequencyBinCount);
-          try { a.getByteFrequencyData(arr); } catch(e) { try { a.getByteTimeDomainData(arr); } catch(e2) { return; } }
-          var half = Math.floor(arr.length / 2);
+          if (!vuBuf || vuBuf.length !== a.frequencyBinCount) vuBuf = new Uint8Array(a.frequencyBinCount);
+          try { a.getByteFrequencyData(vuBuf); } catch(e) { try { a.getByteTimeDomainData(vuBuf); } catch(e2) { return; } }
+          var half = vuBuf.length >> 1;
           var sumL = 0, sumR = 0;
-          for (var i = 0; i < half; i++) sumL += arr[i];
-          for (var i = half; i < arr.length; i++) sumR += arr[i];
+          for (var i = 0; i < half; i++) sumL += vuBuf[i];
+          for (var i = half; i < vuBuf.length; i++) sumR += vuBuf[i];
           lvlL = Math.min(1, sumL / half / 255 * 1.5);
           lvlR = Math.min(1, sumR / half / 255 * 1.5);
         } else {
@@ -189,7 +179,7 @@ function RecordPlayer() {
           lvlR = 0.08 + energy * 0.5 + Math.sin(t * 2.8 + 0.7) * 0.08 + (1 - energy) * Math.random() * 0.12;
         }
 
-        var v = vuRef.current;
+        var v = vuDataRef.current;
         v.l = Math.max(Math.min(lvlL, 1), v.l * 0.92);
         v.r = Math.max(Math.min(lvlR, 1), v.r * 0.92);
         v.pl = Math.max(v.pl, v.l);
@@ -203,29 +193,23 @@ function RecordPlayer() {
         }
       } catch(e) {}
     }
-    vuId = requestAnimationFrame(vuLoop);
+    vuId = requestAnimationFrame(loop);
+    return function() { cancelAnimationFrame(vuId); };
+  }, [state.isPlaying, state.hasTrack]);
 
-    return function() {
-      if (u1) u1();
-      if (u2) u2();
-      if (u3) u3();
-      cancelAnimationFrame(vuId);
-    };
-  }, []);
-
-  const tonearmAngle = state.hasTrack
+  var tonearmAngle = state.hasTrack
     ? geom.baseAngle + state.progress * (geom.maxAngle - geom.baseAngle)
     : REST_ANGLE;
 
-  const armLength = Math.max(200, geom.recordRadius * 1.7 + 40);
-  const armHeight = 36;
+  var armLength = Math.max(200, geom.recordRadius * 1.7 + 40);
+  var armHeight = 36;
 
-  const rotationSpeed = state.duration > 0
+  var rotationSpeed = state.duration > 0
     ? (state.duration < 120000 ? 0.77 : state.duration < 240000 ? 1.33 : 1.8)
     : 1.8;
 
-  const displayTime = state.duration > 0 ? Math.round(savedProgress * state.duration) : 0;
-  const progressPercent = state.duration > 0 ? (savedProgress * 100) : 0;
+  var displayTime = state.duration > 0 ? Math.round(savedProgress * state.duration) : 0;
+  var progressPercent = state.duration > 0 ? (savedProgress * 100) : 0;
 
   return el('div', { className: 'plattenspieler-container plattenspieler-theme-' + theme },
     el('div', { className: 'plattenspieler-theme-selector' },
@@ -241,9 +225,7 @@ function RecordPlayer() {
     el('div', { className: 'plattenspieler-turntable', ref: turntableRef },
       el('div', { className: 'plattenspieler-play-indicator' },
         el('div', {
-          className: 'plattenspieler-play-indicator-dot' + (
-            !state.isPlaying && state.hasTrack ? ' plattenspieler-play-indicator-dot-paused' : ''
-          ),
+          className: 'plattenspieler-play-indicator-dot' + (!state.isPlaying && state.hasTrack ? ' plattenspieler-play-indicator-dot-paused' : ''),
         }),
       ),
       state.hasTrack
