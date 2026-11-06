@@ -155,9 +155,7 @@ build, and runs `shellcheck` on `update.sh`.
 3. **Tonearm geometry** may need offset adjustment for extreme viewport sizes.
 4. **DevTools** are available at `http://127.0.0.1:8088` after `spicetify enable-devtools`.
 
-## Development Workflow
+## Development
 
-1. `npm ci` once
-2. `npm run watch` while editing, or `npm run check` before committing
-3. `./update.sh` (checks, copies `dist/`, creates a backup, runs `spicetify apply`)
-4. Reload the page in DevTools (Ctrl+R) – no full restart needed
+Setup, commands, debugging and releasing are described in [DEVELOPMENT.md](DEVELOPMENT.md); contribution rules in
+[CONTRIBUTING.md](CONTRIBUTING.md).
