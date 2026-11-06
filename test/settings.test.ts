@@ -16,9 +16,9 @@ describe("sanitizeSettings", () => {
     expect(sanitizeSettings("x")).toEqual(DEFAULT_SETTINGS);
   });
   it("keeps valid fields and drops invalid ones", () => {
-    expect(sanitizeSettings({ theme: "2000s", rpm: "99", showVu: "yes", showInfo: false })).toEqual({
+    expect(sanitizeSettings({ theme: "silver", rpm: "99", showVu: "yes", showInfo: false })).toEqual({
       ...DEFAULT_SETTINGS,
-      theme: "2000s",
+      theme: "silver",
       showInfo: false,
     });
   });
@@ -32,7 +32,10 @@ describe("loadSettings / saveSettings", () => {
     expect(loadSettings(s)).toEqual(value);
   });
   it("migrates the legacy theme key", () => {
-    expect(loadSettings(memoryStorage({ [LEGACY_THEME_KEY]: "2000s" })).theme).toBe("2000s");
+    expect(loadSettings(memoryStorage({ [LEGACY_THEME_KEY]: "2000s" })).theme).toBe("silver");
+  });
+  it("maps the old 2000s finish to silver", () => {
+    expect(sanitizeSettings({ theme: "2000s" }).theme).toBe("silver");
   });
   it("survives corrupt JSON", () => {
     expect(loadSettings(memoryStorage({ [STORAGE_KEY]: "{oops" }))).toEqual(DEFAULT_SETTINGS);

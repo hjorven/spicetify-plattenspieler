@@ -17,7 +17,7 @@ clickable progress bar, stereo VU meter, and responsive layout.
 - Clickable progress bar with seek support
 - Play/pause detection (green/orange status dot), click the record to play/pause
 - Settings window (gear icon, top right) with tabs for display, turntable and about
-- Three themes: Modern (dark, rounded, green), 2000s (silver, square, blue) and Spotify (follows your Spicetify color scheme)
+- Three finishes: Modern (dark, rounded, green), Silver (the whole page as brushed-aluminum hi-fi gear of the early 80s, with VFD displays, peak meter and bevelled keys) and Spotify (follows your Spicetify color scheme)
 - Fixed or automatic speed (33⅓ / 45 / 78 RPM), VU meter and track info can be toggled
 - Fallback vinyl label when a track has no album art
 - Keyboard support: Space/Enter on the record, arrow keys on the progress bar, Esc closes the settings

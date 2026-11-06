@@ -5,7 +5,7 @@ import { useTurntableGeometry } from "../hooks/useTurntableGeometry";
 import { useTurntableMotion } from "../hooks/useTurntableMotion";
 import { formatTime } from "../lib/format";
 import { resolveRpm, SECONDS_PER_REVOLUTION } from "../lib/geometry";
-import { RPM_OPTIONS, THEMES } from "../lib/settings";
+import { RPM_OPTIONS, skinOf, THEMES } from "../lib/settings";
 import { Card, StatTile } from "./Card";
 import { Header } from "./Header";
 import { Levels } from "./Levels";
@@ -34,7 +34,7 @@ export function RecordPlayer() {
   const revolutions = track.durationMs > 0 ? Math.round(track.durationMs / 1000 / secondsPerRevolution) : 0;
 
   return (
-    <div className="plattenspieler-page">
+    <div className={`plattenspieler-page plattenspieler-skin-${skinOf(settings.theme)}`}>
       <Header
         status={status}
         rpm={settings.rpm}
@@ -66,7 +66,7 @@ export function RecordPlayer() {
               <StatTile label="Speed" value={rpmLabel} unit="RPM" hint={settings.rpm === "auto" ? "auto, by song length" : "fixed"} />
               <StatTile label="Length" value={track.hasTrack ? formatTime(track.durationMs) : "–"} hint="track duration" />
               <StatTile label="Revolutions" value={revolutions || "–"} hint="for this song" />
-              <StatTile label="Style" value={themeLabel} hint="turntable finish" />
+              <StatTile label="Style" value={themeLabel} hint="finish" />
             </div>
           )}
           <NowPlaying track={track} controls={controls} motion={motion} />

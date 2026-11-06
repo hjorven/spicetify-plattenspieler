@@ -5,6 +5,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Silver finish is back as a full hi-fi skin modeled on real early-80s silver components: brushed aluminum, VFD displays, segmented peak power meter with scale, bevelled keys with indicator LEDs, amber badge, chrome feet
+
+### Changed
+- Theme `2000s` is renamed to `silver`; saved settings are migrated automatically
+- VU bars use `clip-path` instead of `scaleX`
+
 ## [1.0.0] – Complete rewrite
 
 ### Animation
