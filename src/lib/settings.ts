@@ -1,4 +1,4 @@
-export type Theme = "modern" | "2000s" | "spotify";
+export type Theme = "modern" | "silver" | "spotify";
 export type Rpm = "auto" | "33" | "45" | "78";
 
 export interface Settings {
@@ -13,7 +13,7 @@ export interface Settings {
 
 export const THEMES: readonly { value: Theme; label: string }[] = [
   { value: "modern", label: "Modern" },
-  { value: "2000s", label: "2000s" },
+  { value: "silver", label: "Silver" },
   { value: "spotify", label: "Spotify" },
 ];
 
@@ -52,6 +52,8 @@ export function sanitizeSettings(input: unknown): Settings {
   if (!input || typeof input !== "object") return s;
   const o = input as Record<string, unknown>;
   if (isTheme(o.theme)) s.theme = o.theme;
+  // "2000s" was the silver finish before it became the full Silver hi-fi skin.
+  else if (o.theme === "2000s") s.theme = "silver";
   if (isRpm(o.rpm)) s.rpm = o.rpm;
   if (typeof o.showVu === "boolean") s.showVu = o.showVu;
   if (typeof o.showInfo === "boolean") s.showInfo = o.showInfo;
@@ -77,4 +79,9 @@ export function saveSettings(settings: Settings, storage: StorageLike = localSto
   } catch {
     // Storage full or blocked: settings simply are not persisted.
   }
+}
+
+/** Silver restyles the whole page as a brushed-aluminum hi-fi unit; the other finishes only skin the turntable. */
+export function skinOf(theme: Theme): "silver" | "default" {
+  return theme === "silver" ? "silver" : "default";
 }

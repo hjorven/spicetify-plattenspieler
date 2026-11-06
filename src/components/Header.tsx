@@ -17,6 +17,7 @@ export function Header({ status, rpm, onRpmChange, onOpenSettings }: Props) {
     <header className="plattenspieler-header">
       <div className="plattenspieler-header-left">
         <h1 className="plattenspieler-title">Plattenspieler</h1>
+        <span className="plattenspieler-model">Direct Drive Turntable System</span>
         <span className={`plattenspieler-status plattenspieler-status-${status}`} aria-live="polite">
           <span className="plattenspieler-status-dot" />
           {STATUS_LABEL[status]}

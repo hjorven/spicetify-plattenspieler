@@ -96,7 +96,7 @@ Stored as JSON in `localStorage` under `plattenspieler:settings`. Unknown or inv
 
 | Key | Values | Default |
 |-----|--------|---------|
-| `theme` | `modern`, `2000s`, `spotify` | `modern` |
+| `theme` | `modern`, `silver`, `spotify` (old value `2000s` is mapped to `silver`) | `modern` |
 | `rpm` | `auto`, `33`, `45`, `78` | `auto` |
 | `showVu` | boolean | `true` |
 | `showInfo` | boolean | `true` |
@@ -130,7 +130,12 @@ With `rpm: auto`: below 2 min → 78 RPM (0.769 s/rev), below 4 min → 45 RPM (
 Spicetify loads `style.css` from the app folder automatically; `build.mjs` copies it to `dist/`.
 
 - Page, cards and settings window use Spotify's colors (`--spice-*` with fallbacks), so they match the active Spicetify theme.
-- The turntable has its own finishes: `.plattenspieler-theme-modern`, `-2000s`, `-spotify` set `--tt-*` variables.
+- The turntable has its own finishes: `.plattenspieler-theme-modern`, `-silver`, `-spotify` set `--tt-*` variables.
+- **Silver skin** (`.plattenspieler-skin-silver` on the page and the settings overlay, via `skinOf(theme)`): restyles the whole page
+  after real early-80s hi-fi gear – brushed-aluminum faceplates with engraved lowercase labels, black smoked display
+  windows with glowing cyan VFD digits (tiles, track text, progress), red indicator tags and key LEDs, an amber speed badge,
+  rectangular bevelled keys, a segmented peak power meter with scale, and chrome feet under the deck.
+- VU bars are revealed with `clip-path` (not `scaleX`) so segmented bars keep their segment width.
 - No CSS animation on the vinyl; no `will-change` (avoids GPU crashes with faulty drivers on Flatpak/Wayland).
 - Z-order inside the turntable: tonearm 10, pivot 11. Header 20 (sticky), settings overlay 1000.
 

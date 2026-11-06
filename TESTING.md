@@ -75,7 +75,8 @@ npm run check
 - [ ] Gear icon (top right) opens the settings window
 - [ ] Esc, the X button and a click on the dark background close it; focus returns to the gear icon
 - [ ] Display → "Modern": dark turntable with rounded corners, green LEDs
-- [ ] Display → "2000s": silver turntable with square corners, blue LEDs
+- [ ] Display → "Silver": whole page in brushed aluminum, cyan VFD displays, segmented peak meter, red key LEDs, chrome feet
+- [ ] Users who had "2000s" selected get "Silver" automatically
 - [ ] Display → "Spotify": turntable colors follow the active Spicetify color scheme
 - [ ] Toggling "Show track info" / "Show VU meter" hides/shows the elements
 - [ ] Turntable → fixed RPM changes the rotation speed immediately

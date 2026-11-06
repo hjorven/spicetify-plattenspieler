@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, RPM_OPTIONS, type Settings, THEMES } from "../../lib/settings";
+import { DEFAULT_SETTINGS, RPM_OPTIONS, type Settings, skinOf, THEMES } from "../../lib/settings";
 import { ICON_CLOSE, Icon } from "../Icon";
 import { OptionGroup, SettingRow, Toggle } from "./controls";
 
@@ -68,8 +68,11 @@ export function SettingsModal({ settings, onChange, onClose }: Props) {
   if (tab === "display") {
     body = (
       <>
-        <SettingRow label="Turntable finish" sublabel={'"Spotify" uses the colors of your Spicetify theme.'}>
-          <OptionGroup label="Turntable finish" options={THEMES} value={settings.theme} onChange={(v) => set("theme", v)} />
+        <SettingRow
+          label="Finish"
+          sublabel={'"Silver" turns the whole page into brushed-aluminum hi-fi gear, "Spotify" uses your Spicetify colors.'}
+        >
+          <OptionGroup label="Finish" options={THEMES} value={settings.theme} onChange={(v) => set("theme", v)} />
         </SettingRow>
         <SettingRow label="Show stat tiles" sublabel="Speed, length, revolutions and finish above the track card.">
           <Toggle label="Show stat tiles" value={settings.showInfo} onChange={(v) => set("showInfo", v)} />
@@ -124,7 +127,7 @@ export function SettingsModal({ settings, onChange, onClose }: Props) {
 
   const content = (
     <div
-      className="plattenspieler-overlay"
+      className={`plattenspieler-overlay plattenspieler-skin-${skinOf(settings.theme)}`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

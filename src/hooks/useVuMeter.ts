@@ -38,9 +38,11 @@ export function useVuMeter(isPlaying: boolean, trackKey: string): [VuRefs, boole
     tries.current = 0;
   }, [trackKey]);
 
+  // clip-path instead of scaleX, so segmented bars (Silver skin) keep their segment width.
+  const clip = (level: number) => `inset(0 ${((1 - clamp01(level)) * 100).toFixed(2)}% 0 0)`;
   const paint = (v: VuLevels) => {
-    if (refs.left.current) refs.left.current.style.transform = `scaleX(${clamp01(v.l).toFixed(3)})`;
-    if (refs.right.current) refs.right.current.style.transform = `scaleX(${clamp01(v.r).toFixed(3)})`;
+    if (refs.left.current) refs.left.current.style.clipPath = clip(v.l);
+    if (refs.right.current) refs.right.current.style.clipPath = clip(v.r);
     if (refs.peakLeft.current) refs.peakLeft.current.style.left = `${(clamp01(v.pl) * 100).toFixed(1)}%`;
     if (refs.peakRight.current) refs.peakRight.current.style.left = `${(clamp01(v.pr) * 100).toFixed(1)}%`;
   };

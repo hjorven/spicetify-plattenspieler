@@ -3,7 +3,7 @@
  *
  * Page chrome follows Spotify / the active Spicetify color scheme (--spice-*),
  * in the card-based layout style of listening-stats. Only the turntable itself
- * has its own finishes (Modern, 2000s, Spotify).
+ * has its own finishes (Modern, Silver, Spotify); Silver also restyles the page (skin).
  */
 
 /* ── Tokens ── */
@@ -501,8 +501,7 @@
 .plattenspieler-level-fill {
   position: absolute;
   inset: 0;
-  transform-origin: left center;
-  transform: scaleX(0);
+  clip-path: inset(0 100% 0 0);
   background: linear-gradient(90deg, var(--ps-accent) 0%, var(--ps-accent) 70%, var(--ps-warn) 88%, #e5484d 100%);
   background-size: 100% 100%;
 }
@@ -518,6 +517,12 @@
   opacity: 0.85;
 }
 
+/* Only used by the Silver skin */
+.plattenspieler-model,
+.plattenspieler-level-scale {
+  display: none;
+}
+
 /* ── Turntable: finishes ── */
 .plattenspieler-theme-modern {
   --tt-radius: 18px;
@@ -529,14 +534,17 @@
   --tt-mat: #151515;
 }
 
-.plattenspieler-theme-2000s {
+.plattenspieler-theme-silver {
   --tt-radius: 3px;
-  --tt-bg: linear-gradient(160deg, #e4e8ef 0%, #b9c0cc 55%, #a3abb9 100%);
-  --tt-border: 1px solid rgba(255, 255, 255, 0.5);
-  --tt-shadow: 0 18px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --tt-accent: #0078d7;
-  --tt-text: rgba(26, 26, 46, 0.45);
-  --tt-mat: #202020;
+  --tt-bg:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, rgba(0, 0, 0, 0.03) 1px 2px, transparent 2px 4px),
+    linear-gradient(180deg, #d9d7d1 0%, #c3c1bb 45%, #aeaca6 100%);
+  --tt-border: 1px solid #e9e8e4;
+  --tt-shadow: 0 1px 0 #8d8b86, 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+  --tt-accent: #ff3b30;
+  --tt-text: #4a4944;
+  --tt-mat: #1a1a1a;
 }
 
 .plattenspieler-theme-spotify {
@@ -880,6 +888,11 @@
   color: var(--ps-subtext);
 }
 
+.plattenspieler-setting-row .plattenspieler-option-group {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
 .plattenspieler-setting-actions {
   display: flex;
   justify-content: flex-end;
@@ -939,4 +952,434 @@
   .plattenspieler-status-playing .plattenspieler-status-dot {
     animation: none;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════
+ * Silver skin – brushed-aluminum hi-fi gear of the early 80s:
+ * silver faceplates with engraved lowercase labels, black smoked
+ * display windows with glowing cyan VFD digits, red/amber indicators,
+ * rectangular keys with a bevel and chrome feet.
+ * ════════════════════════════════════════════════════════════════ */
+.plattenspieler-skin-silver {
+  --ps-bg: radial-gradient(ellipse at 50% 0%, #2a332f 0%, #161a18 60%, #101211 100%);
+  --ps-alu:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, rgba(0, 0, 0, 0.035) 1px 2px, transparent 2px 3px),
+    linear-gradient(180deg, #dcdad4 0%, #c8c6c0 40%, #b3b1ab 100%);
+  --ps-card: var(--ps-alu);
+  --ps-card-2: rgba(0, 0, 0, 0.06);
+  --ps-border: rgba(0, 0, 0, 0.18);
+  --ps-text: #2b2b29;
+  --ps-subtext: #4d4c48;
+  --ps-dim: #6a6964;
+  --ps-accent: #6fd8ff;
+  --ps-accent-rgb: 111, 216, 255;
+  --ps-warn: #ffb347;
+  --ps-track: rgba(111, 216, 255, 0.12);
+  --ps-radius: 3px;
+  --ps-radius-sm: 2px;
+  --vfd: #bfefff;
+  --vfd-glow: 0 0 4px rgba(111, 216, 255, 0.9), 0 0 12px rgba(111, 216, 255, 0.45);
+  --vfd-window: linear-gradient(180deg, #050607 0%, #0d1012 100%);
+  --vfd-red: #ff4a3d;
+  --amber: #ffad3b;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.plattenspieler-page.plattenspieler-skin-silver {
+  background: var(--ps-bg);
+  background-attachment: fixed;
+}
+
+/* Faceplates: header, cards, tiles */
+.plattenspieler-skin-silver .plattenspieler-header,
+.plattenspieler-skin-silver .plattenspieler-card,
+.plattenspieler-skin-silver .plattenspieler-tile,
+.plattenspieler-skin-silver .plattenspieler-modal {
+  background: var(--ps-alu);
+  border: 1px solid #ecebe7;
+  border-bottom-color: #8e8c87;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 10px 24px rgba(0, 0, 0, 0.45);
+  color: var(--ps-text);
+}
+
+.plattenspieler-skin-silver .plattenspieler-header {
+  margin: 16px 0 20px;
+  padding: 14px 20px;
+  border-radius: 3px;
+  top: 8px;
+}
+
+/* Engraved logotype + model line */
+.plattenspieler-skin-silver .plattenspieler-title {
+  font-size: 22px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  color: #3a3a37;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.plattenspieler-skin-silver .plattenspieler-model {
+  display: inline;
+  font-size: 12px;
+  color: #4d4c48;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Lowercase engraved labels instead of uppercase eyebrows */
+.plattenspieler-skin-silver .plattenspieler-eyebrow,
+.plattenspieler-skin-silver .plattenspieler-tile-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  color: #4d4c48;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.plattenspieler-skin-silver .plattenspieler-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #33332f;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Status: small VFD window with red/cyan segments */
+.plattenspieler-skin-silver .plattenspieler-status {
+  border-radius: 2px;
+  background: var(--vfd-window);
+  border: 1px solid #000;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--vfd);
+  text-shadow: var(--vfd-glow);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+}
+
+.plattenspieler-skin-silver .plattenspieler-status-playing .plattenspieler-status-dot {
+  background: var(--vfd);
+  box-shadow: var(--vfd-glow);
+  animation: none;
+}
+
+.plattenspieler-skin-silver .plattenspieler-status-paused {
+  color: var(--amber);
+  text-shadow: 0 0 6px rgba(255, 173, 59, 0.7);
+}
+
+.plattenspieler-skin-silver .plattenspieler-status-paused .plattenspieler-status-dot {
+  background: var(--amber);
+}
+
+/* Pills become red indicator tags (like the "random" tag on a CD display) */
+.plattenspieler-skin-silver .plattenspieler-pill {
+  border-radius: 2px;
+  background: var(--vfd-window);
+  border: 1px solid #000;
+  color: var(--vfd-red);
+  text-shadow: 0 0 6px rgba(255, 74, 61, 0.7);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.6);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+
+/* Keys: rectangular aluminum buttons with bevel */
+.plattenspieler-skin-silver .plattenspieler-option,
+.plattenspieler-skin-silver .plattenspieler-btn,
+.plattenspieler-skin-silver .plattenspieler-icon-btn,
+.plattenspieler-skin-silver .plattenspieler-play-btn {
+  border-radius: 2px;
+  border: 1px solid #8d8b86;
+  border-top-color: #f3f2ee;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #e4e2dc, #bdbbb5);
+  color: #3c3c39;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  text-transform: lowercase;
+}
+
+.plattenspieler-skin-silver .plattenspieler-option:hover,
+.plattenspieler-skin-silver .plattenspieler-btn:hover,
+.plattenspieler-skin-silver .plattenspieler-icon-btn:hover,
+.plattenspieler-skin-silver .plattenspieler-play-btn:hover {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #ebe9e3, #c6c4be);
+  color: #222;
+  transform: none;
+}
+
+.plattenspieler-skin-silver .plattenspieler-option:active,
+.plattenspieler-skin-silver .plattenspieler-btn:active,
+.plattenspieler-skin-silver .plattenspieler-icon-btn:active,
+.plattenspieler-skin-silver .plattenspieler-play-btn:active {
+  background: linear-gradient(180deg, #b9b7b1, #d6d4ce);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  transform: none;
+}
+
+.plattenspieler-skin-silver .plattenspieler-icon-btn {
+  width: 36px;
+  height: 30px;
+}
+
+.plattenspieler-skin-silver .plattenspieler-play-btn {
+  width: 64px;
+  height: 36px;
+}
+
+.plattenspieler-skin-silver .plattenspieler-transport {
+  gap: 4px;
+}
+
+/* Segment control: row of keys in a recessed slot; active key has a lit indicator */
+.plattenspieler-skin-silver .plattenspieler-option-group-tabs {
+  gap: 2px;
+  padding: 3px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.plattenspieler-skin-silver .plattenspieler-option {
+  position: relative;
+  padding: 6px 12px 6px 20px;
+}
+
+.plattenspieler-skin-silver .plattenspieler-option::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: #6e1a14;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.plattenspieler-skin-silver .plattenspieler-option-active,
+.plattenspieler-skin-silver .plattenspieler-option-active:hover,
+.plattenspieler-skin-silver .plattenspieler-option-group-tabs .plattenspieler-option-active {
+  background: linear-gradient(180deg, #c3c1bb, #dad8d2);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  color: #1e1e1c;
+}
+
+.plattenspieler-skin-silver .plattenspieler-option-active::before {
+  background: var(--vfd-red);
+  box-shadow: 0 0 6px var(--vfd-red);
+}
+
+/* Tiles: engraved label on aluminum, value in a VFD window */
+.plattenspieler-skin-silver .plattenspieler-tile-value {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 2px;
+  background: var(--vfd-window);
+  border: 1px solid #000;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.6);
+  font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 22px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--vfd);
+  text-shadow: var(--vfd-glow);
+}
+
+.plattenspieler-skin-silver .plattenspieler-tile-unit {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--vfd);
+  opacity: 0.75;
+}
+
+.plattenspieler-skin-silver .plattenspieler-tile-hint {
+  margin-top: 4px;
+  color: #55544f;
+  text-transform: lowercase;
+}
+
+/* Now playing: text in a display window, progress as VFD bar */
+.plattenspieler-skin-silver .plattenspieler-now-row {
+  padding: 10px;
+  border-radius: 2px;
+  background: var(--vfd-window);
+  border: 1px solid #000;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.plattenspieler-skin-silver .plattenspieler-now-art {
+  border-radius: 1px;
+  box-shadow: none;
+  opacity: 0.92;
+}
+
+.plattenspieler-skin-silver .plattenspieler-now-title {
+  color: var(--vfd);
+  text-shadow: var(--vfd-glow);
+  font-weight: 600;
+}
+
+.plattenspieler-skin-silver .plattenspieler-now-sub,
+.plattenspieler-skin-silver .plattenspieler-now-album {
+  color: rgba(191, 239, 255, 0.65);
+}
+
+.plattenspieler-skin-silver .plattenspieler-progress-track {
+  height: 6px;
+  border-radius: 1px;
+  background: #07090a;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.plattenspieler-skin-silver .plattenspieler-progress-fill {
+  background: var(--vfd);
+  box-shadow: var(--vfd-glow);
+}
+
+.plattenspieler-skin-silver .plattenspieler-progress-times {
+  margin-top: 4px;
+  font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  color: #3c3c39;
+}
+
+/* Peak meter: black window, segmented cyan bars, scale below (FL peak power meter) */
+.plattenspieler-skin-silver .plattenspieler-levels {
+  gap: 6px;
+  padding: 12px 14px 8px;
+  border-radius: 2px;
+  background: var(--vfd-window);
+  border: 1px solid #000;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.plattenspieler-skin-silver .plattenspieler-level-name {
+  font-size: 10px;
+  color: rgba(191, 239, 255, 0.5);
+}
+
+.plattenspieler-skin-silver .plattenspieler-level-track {
+  height: 7px;
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, rgba(111, 216, 255, 0.1) 0 6px, transparent 6px 9px);
+  overflow: visible;
+}
+
+.plattenspieler-skin-silver .plattenspieler-level-fill {
+  background: repeating-linear-gradient(90deg, var(--vfd) 0 6px, transparent 6px 9px);
+  filter: drop-shadow(0 0 3px rgba(111, 216, 255, 0.9));
+}
+
+.plattenspieler-skin-silver .plattenspieler-level-peak {
+  width: 6px;
+  margin-left: -6px;
+  background: var(--vfd-red);
+  box-shadow: 0 0 6px var(--vfd-red);
+  opacity: 1;
+}
+
+.plattenspieler-skin-silver .plattenspieler-level-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 26px;
+  font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 9px;
+  color: rgba(191, 239, 255, 0.55);
+}
+
+/* Deck: amber glowing badge, chrome feet under the unit */
+.plattenspieler-skin-silver .plattenspieler-deck {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.plattenspieler-skin-silver .plattenspieler-deck .plattenspieler-card-header .plattenspieler-pill {
+  color: var(--amber);
+  text-shadow: 0 0 6px rgba(255, 173, 59, 0.8), 0 0 14px rgba(255, 140, 0, 0.4);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.plattenspieler-skin-silver .plattenspieler-deck::before,
+.plattenspieler-skin-silver .plattenspieler-deck::after {
+  content: "";
+  position: absolute;
+  bottom: -12px;
+  width: 56px;
+  height: 12px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #6f6e6a, #e8e7e3 35%, #9a9994 60%, #5c5b57);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.6);
+}
+
+.plattenspieler-skin-silver .plattenspieler-deck::before {
+  left: 12%;
+}
+
+.plattenspieler-skin-silver .plattenspieler-deck::after {
+  right: 12%;
+}
+
+/* Turntable inside the silver deck sits flush with the faceplate */
+.plattenspieler-skin-silver .plattenspieler-turntable {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.plattenspieler-theme-silver .plattenspieler-badge {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.2em;
+}
+
+.plattenspieler-theme-silver .plattenspieler-speed {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.plattenspieler-theme-silver .plattenspieler-speed:not(.is-active) .plattenspieler-speed-led,
+.plattenspieler-theme-silver .plattenspieler-led:not(.is-on):not(.is-paused) {
+  background: #5a1611;
+}
+
+/* Settings window */
+.plattenspieler-skin-silver .plattenspieler-modal-title {
+  font-style: italic;
+  font-weight: 800;
+  color: #3a3a37;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.plattenspieler-skin-silver .plattenspieler-tab {
+  color: #4d4c48;
+  text-transform: lowercase;
+}
+
+.plattenspieler-skin-silver .plattenspieler-tab-active {
+  color: #1e1e1c;
+  border-bottom-color: var(--vfd-red);
+}
+
+.plattenspieler-skin-silver .plattenspieler-about p {
+  color: #3c3c39;
+}
+
+.plattenspieler-skin-silver .plattenspieler-link {
+  color: #1a5f9c;
+}
+
+.plattenspieler-page.plattenspieler-skin-silver .plattenspieler-footer,
+.plattenspieler-page.plattenspieler-skin-silver .plattenspieler-footer .plattenspieler-link {
+  color: #8a8f8c;
+}
+
+.plattenspieler-skin-silver :focus-visible {
+  outline-color: var(--vfd-red);
 }

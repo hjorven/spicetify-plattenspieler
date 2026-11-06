@@ -21,7 +21,7 @@ export function Levels({ isPlaying, trackKey }: { isPlaying: boolean; trackKey: 
   return (
     <Card
       eyebrow="Levels"
-      title="VU meter"
+      title="Peak meter"
       aside={
         <span className="plattenspieler-pill" title={live ? "Reading Spotify's audio analyser" : "No analyser available"}>
           {live ? "live" : "simulated"}
@@ -31,6 +31,11 @@ export function Levels({ isPlaying, trackKey }: { isPlaying: boolean; trackKey: 
       <div className="plattenspieler-levels" aria-hidden="true">
         <Channel name="L" bar={refs.left as DivRef} peak={refs.peakLeft as DivRef} />
         <Channel name="R" bar={refs.right as DivRef} peak={refs.peakRight as DivRef} />
+        <div className="plattenspieler-level-scale">
+          {["0.1", "0.5", "1", "3", "5", "10", "30", "50", "100"].map((n) => (
+            <span key={n}>{n}</span>
+          ))}
+        </div>
       </div>
     </Card>
   );
