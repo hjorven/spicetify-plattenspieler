@@ -2,13 +2,13 @@
 
 Manual checklist to run through after every update.
 
-## 0. Syntax Check
+## 0. Automated Checks
 
 ```bash
-node --check ~/Downloads/plattenspieler/index.js
+npm run check
 ```
 
-- [ ] No errors → proceed
+- [ ] Typecheck, unit tests and build pass → proceed
 - [ ] Errors → fix first
 
 ## 1. App Loads
@@ -29,7 +29,7 @@ node --check ~/Downloads/plattenspieler/index.js
 - [ ] Tonearm moves smoothly to starting position
 - [ ] Status dot turns green
 - [ ] Track name + artist name shown below turntable
-- [ ] VU meter box visible on right side, bars move with music
+- [ ] VU meter card visible, bars move with music (pill shows live or simulated)
 
 ## 4. Playback Progress
 
@@ -43,7 +43,7 @@ node --check ~/Downloads/plattenspieler/index.js
 - [ ] Pause → vinyl stops (animation pauses in place, no reset)
 - [ ] Status dot turns orange
 - [ ] Tonearm stays at current position (no jump)
-- [ ] VU bars freeze at current level (no movement)
+- [ ] VU bars and peaks fall to 0
 - [ ] Play → rotation continues smoothly
 - [ ] VU bars resume moving
 
@@ -60,11 +60,34 @@ node --check ~/Downloads/plattenspieler/index.js
 - [ ] Tonearm angle updates to match new position
 - [ ] No console errors
 
-## 8. Theme Switching
+## 7b. Animation
 
-- [ ] Click "Modern" → dark theme with rounded corners, green accent
-- [ ] Click "2000s" → silver theme with square corners, blue accent
-- [ ] Theme persists across page reload (localStorage)
+- [ ] Play: record spins up smoothly (~1 s), pause: it slows down (~1.5 s) and stops without jumping back
+- [ ] With "Platter inertia" off, the record starts and stops immediately
+- [ ] Changing the speed in the header changes rotation smoothly, no jump
+- [ ] Tonearm moves continuously (no 1-second steps), swings smoothly after a seek or song change
+- [ ] Pause: tonearm lifts slightly (bigger shadow), drops back on play
+- [ ] Progress bar moves continuously
+- [ ] Paused and settled: CPU usage drops (loop stops)
+
+## 8. Settings Window
+
+- [ ] Gear icon (top right) opens the settings window
+- [ ] Esc, the X button and a click on the dark background close it; focus returns to the gear icon
+- [ ] Display → "Modern": dark turntable with rounded corners, green LEDs
+- [ ] Display → "2000s": silver turntable with square corners, blue LEDs
+- [ ] Display → "Spotify": turntable colors follow the active Spicetify color scheme
+- [ ] Toggling "Show track info" / "Show VU meter" hides/shows the elements
+- [ ] Turntable → fixed RPM changes the rotation speed immediately
+- [ ] Turntable → "Reset to defaults" restores all settings
+- [ ] Settings persist across page reload (`localStorage` key `plattenspieler:settings`)
+- [ ] Old installs: previously chosen theme (`plattenspieler-theme`) is kept
+
+## 8b. Click & Keyboard
+
+- [ ] Click on the record toggles play/pause (when enabled)
+- [ ] Tab to the record, Space/Enter toggles play/pause
+- [ ] Tab to the progress bar, arrow keys seek ±5 s
 
 ## 9. Responsive
 
@@ -74,7 +97,7 @@ node --check ~/Downloads/plattenspieler/index.js
 
 ## 10. No Album Artwork (Edge Case)
 
-- [ ] Play track without cover → vinyl stays black, no crash, no errors
+- [ ] Play track without cover → black vinyl with colored label showing the track name, no errors
 
 ## 11. VU Meter (if analyser available)
 
