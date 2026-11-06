@@ -6,7 +6,6 @@ The app renders a React component (`RecordPlayer`) in a Spicetify custom page at
 
 **UI language:** English
 **Install path:** `~/.spicetify/CustomApps/plattenspieler/`
-**Source path:** `/var/home/jorven/Downloads/plattenspieler/`
 
 ## Files
 
@@ -22,14 +21,41 @@ The app renders a React component (`RecordPlayer`) in a Spicetify custom page at
 
 Spicetify expects a `render()` function as export. It returns `React.createElement(RecordPlayer)`. The app name comes from `manifest.json`; the page is mounted at `/plattenspieler`.
 
-### Component `RecordPlayer`
+### Components
 
-A single functional React component with four state slices:
+| Component | Purpose |
+|-----------|---------|
+| `ErrorBoundary` | Catches render errors and shows the error with a retry button instead of Spotify's generic error page |
+| `RecordPlayer` | Main component: player state, geometry, layout |
+| `Tonearm` | SVG tonearm (gradient ids are prefixed with `plattenspieler-` to avoid collisions) |
+| `VuMeter` | Stereo VU meter with its own state and RAF loop, so only the meter re-renders ~20x/s |
+| `SettingsModal` | Settings window rendered via `Spicetify.ReactDOM.createPortal` into `document.body` |
+| `Toggle` | Uses `Spicetify.ReactComponent.Toggle` when available, otherwise a plain checkbox |
 
-1. **`state` (player data):** `albumArt`, `trackName`, `artistName`, `isPlaying`, `progress` (0–1), `currentTime`, `duration`, `hasTrack`
+### State in `RecordPlayer`
+
+1. **`track`:** `albumArt`, `trackName`, `artistName`, `albumName`, `isPlaying`, `progress` (0–1), `duration`, `hasTrack`, `trackKey`
 2. **`geom` (turntable geometry):** dynamic from `ResizeObserver` + `getBoundingClientRect`
-3. **`vuData` (VU meter levels):** `l`, `r` (fill), `pl`, `pr` (peak)
-4. **`turntableRef`:** ref to `.plattenspieler-turntable` div for geometry measurement
+3. **`settings`:** persisted as JSON in `localStorage` under `plattenspieler:settings`
+4. **`showSettings`**, **`artFailed`** (cover failed to load → fallback label)
+
+### Settings
+
+| Key | Values | Default |
+|-----|--------|---------|
+| `theme` | `modern`, `2000s`, `spotify` | `modern` |
+| `rpm` | `auto`, `33`, `45`, `78` | `auto` |
+| `showVu` | boolean | `true` |
+| `showInfo` | boolean | `true` |
+| `clickToToggle` | boolean | `true` |
+
+The old key `plattenspieler-theme` is migrated automatically. Unknown or corrupt values fall back to the defaults.
+
+### Reading the player (`readPlayer()`)
+
+Prefers the stable getters `Spicetify.Player.getDuration()`, `getProgress()` and `isPlaying()` and falls back to
+`Spicetify.Player.data` when a getter is missing. Cover URLs are taken from `item.metadata.image_xlarge_url` or
+`item.album.images[0].url`; `spotify:image:<id>` URIs are converted to `https://i.scdn.co/image/<id>`.
 
 ### Geometry (`geom`, `recalc()`)
 
@@ -53,16 +79,14 @@ tonearmAngle =
 
 The arm is drawn as an SVG with linear/radial gradients. `transformOrigin` is at the left end (pivot post). The angle is set via CSS `transform: rotate()` with a `cubic-bezier(0.34, 1.2, 0.64, 1)` transition over 0.6s.
 
-### Event Binding (`useEffect #2`)
+### Event Binding
 
-Three Spicetify player events plus a `requestAnimationFrame` loop:
+- **`songchange`** → resets the cover error flag, calls `update()`
+- **`onplaypause`** → sets `isPlaying` from `Spicetify.Player.isPlaying()`
+- **`onprogress`** → updates `progress` (does not touch `isPlaying`, which previously caused a paused track to show as playing)
+- one delayed `update()` after 1 s in case the player was not ready when the page opened
 
-- **`songchange`** → resets `savedProgress`, calls `update()`
-- **`onplaypause`** → toggles `isPlaying` (via `ref` + `setState`), calls `update()` on play
-- **`onprogress`** → updates `currentTime` and `progress`, sets `savedProgress`, signals `isPlaying: true`
-- **VU loop** → `requestAnimationFrame` polling `Spicetify.Player.analyser` or generating beat-simulated data
-
-Cleanup on unmount: all three `unsub()` functions + `cancelAnimationFrame`.
+Cleanup on unmount: `removeEventListener` for all three events.
 
 ### VU Meter
 
@@ -76,42 +100,47 @@ Two bars in a box on the right side of the turntable, representing stereo channe
 - RAF loop runs at 60fps, state updates throttled to ~20fps
 - Bar fill: instant attack, slow decay (`×0.92` per frame ≈ 130ms to 50%)
 - Peak: instant attack, very slow decay (`×0.997` per frame ≈ 3-4s hold)
-- VU loop checks `isPlayingRef.current` – no update when paused (bars freeze)
+- When paused, bars and peaks decay to 0 and the loop stops
 
 ### Vinyl Rotation Speed
 
+With `rpm: auto`:
+
 ```
 rotationSpeed =
-  duration < 120s  →  0.77s/rotation (≈78 RPM)
-  duration < 240s  →  1.33s/rotation (≈45 RPM)
-  else             →  1.8s/rotation  (≈33⅓ RPM)
+  duration < 120s  →  0.769s/rotation (≈78 RPM)
+  duration < 240s  →  1.333s/rotation (≈45 RPM)
+  else             →  1.8s/rotation   (≈33⅓ RPM)
 ```
+
+A fixed value from the settings overrides this.
 
 ### Render Structure
 
 ```
-div.plattenspieler-container
-  div.plattenspieler-theme-selector
-    button "Modern"
-    button "2000s"
-  div.plattenspieler-turntable
-    div.plattenspieler-play-indicator
-    div.plattenspieler-platter OR div.plattenspieler-idle
-    div.plattenspieler-tonearm
-    div.plattenspieler-pivot
-    div.plattenspieler-vu-container (only when hasTrack)
-      div.plattenspieler-vu (L channel)
-      div.plattenspieler-vu (R channel)
-  div.plattenspieler-info (only when hasTrack)
-    div.track-name
-    div.artist-name
-    div.progress-container
-  div.plattenspieler-footer
+ErrorBoundary
+  div.plattenspieler-container.plattenspieler-theme-<theme>
+    div.plattenspieler-toolbar
+      button (gear) → opens SettingsModal
+    div.plattenspieler-turntable
+      div.plattenspieler-play-indicator
+      div.plattenspieler-platter (role=button when click-to-play is on) OR div.plattenspieler-idle
+      Tonearm
+      div.plattenspieler-pivot
+      VuMeter (when hasTrack and showVu)
+    div.plattenspieler-info (when hasTrack and showInfo)
+      div.track-name, div.artist-name
+      div.progress-container (progress bar has role=slider)
+    div.plattenspieler-footer
+    SettingsModal (portal into document.body)
+      div.plattenspieler-overlay > div.plattenspieler-modal[role=dialog]
+        header, tabs (Display / Turntable / About), tab panel
 ```
 
 ### Progress Bar Click
 
-`onClick` handler calculates click position relative to bar using `e.currentTarget.getBoundingClientRect()` and calls `Spicetify.Player.seek(ratio)`.
+`onClick` calculates the click position relative to the bar and calls `Spicetify.Player.seek(ms)`.
+Keyboard: arrow keys seek ±5 s, Home/End jump to start/end.
 
 ### `formatTime(ms)`
 
@@ -130,7 +159,9 @@ Helper function (`mm:ss`), uses `Math.floor` + `padStart`.
 
 ### Themes
 
-Custom properties on `.plattenspieler-theme-modern` and `.plattenspieler-theme-2000s`:
+Custom properties on `.plattenspieler-theme-modern`, `.plattenspieler-theme-2000s` and `.plattenspieler-theme-spotify`
+(the latter maps to `--spice-*` variables with fallbacks). The settings overlay gets the same theme class, because
+it is rendered outside the container:
 - `--plinth-radius`, `--info-radius`: border-radius (24px/12px modern, 2px for 2000s)
 - `--container-bg`, `--plinth-bg`: background gradients
 - `--accent`: fill color (green for modern, blue for 2000s)
@@ -176,22 +207,23 @@ Animation controlled via inline `animationDuration` (RPM-based) and `animationPl
 ```
 Spicetify.Player events → readPlayer() → setState()
 ResizeObserver          → recalc()     → setGeom()
-requestAnimationFrame   → vuLoop()     → vuData (ref → setState)
+requestAnimationFrame   → VuMeter loop → local state of VuMeter
+SettingsModal           → setSettings() → localStorage + re-render
 ```
 
-No Redux, no Context – pure `useState` + `useEffect` + module-level `savedProgress`.
+No Redux, no Context, no module-level mutable state – only `useState`, `useRef` and `useEffect`.
 
 ## Known Issues & Limitations
 
 1. **Spotify Flatpak GPU crash** (`GPU process isn't usable`) – environment issue, not app-related. Workaround: `--disable-gpu` flag.
 2. **VU meter analyser** may not be available in all Spicetify versions – falls back to beat simulation.
-3. **No fallback image** for tracks without album artwork – vinyl stays black.
+3. Tracks without (loadable) artwork show a plain vinyl with a colored label instead.
 4. **Tonearm geometry** may need offset adjustment for extreme viewport sizes.
 5. **DevTools** at `http://127.0.0.1:8088` (enabled by `spicetify apply`).
 
 ## Development Workflow
 
-1. Edit files in `/var/home/jorven/Downloads/plattenspieler/`
-2. `node --check index.js` → syntax check
-3. `./update.sh` (copies files, creates backup, runs `spicetify apply`)
+1. Edit files in your clone of the repository
+2. `node --check index.js` → syntax check (also runs in CI)
+3. `./update.sh` (copies files from the script's directory, creates a backup, runs `spicetify apply`)
 4. Reload DevTools page (`127.0.0.1:8088`, Ctrl+R) – no full restart needed

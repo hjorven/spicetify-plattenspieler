@@ -7,7 +7,7 @@ clickable progress bar, stereo VU meter, and responsive layout.
 ![Screenshot](assets/screenshot.png)
 <!-- TODO: Add screenshot, see assets/README.md -->
 
-> **GitHub:** `https://github.com/Death-Watcher/spicetify-plattenspieler`
+> **GitHub:** `https://github.com/hjorven/spicetify-plattenspieler`
 
 ## Features
 
@@ -15,15 +15,20 @@ clickable progress bar, stereo VU meter, and responsive layout.
 - SVG tonearm with metallic gradient, moves from outer to inner groove matching song progress
 - Stereo VU meter box with peak hold (right side of turntable)
 - Clickable progress bar with seek support
-- Play/pause detection (green/orange status dot)
-- Two themes: Modern (dark, rounded, green accent) and 2000s (silver, square, blue accent)
+- Play/pause detection (green/orange status dot), click the record to play/pause
+- Settings window (gear icon, top right) with tabs for display, turntable and about
+- Three themes: Modern (dark, rounded, green), 2000s (silver, square, blue) and Spotify (follows your Spicetify color scheme)
+- Fixed or automatic speed (33⅓ / 45 / 78 RPM), VU meter and track info can be toggled
+- Fallback vinyl label when a track has no album art
+- Keyboard support: Space/Enter on the record, arrow keys on the progress bar, Esc closes the settings
+- Respects `prefers-reduced-motion`
 - Responsive geometry via `ResizeObserver`
 - No build tool required – pure `React.createElement`
 
 ## Installation
 
 ```bash
-git clone https://github.com/Death-Watcher/spicetify-plattenspieler.git
+git clone https://github.com/hjorven/spicetify-plattenspieler.git
 mkdir -p ~/.spicetify/CustomApps/plattenspieler
 cp spicetify-plattenspieler/index.js spicetify-plattenspieler/style.css spicetify-plattenspieler/manifest.json \
    ~/.spicetify/CustomApps/plattenspieler/
@@ -51,12 +56,16 @@ is in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 ## Known Limitations
 
 - Spotify Flatpak installations may experience GPU crashes on song start (not caused by this app) – workaround: `--disable-gpu` flag.
-- No fallback image if a track has no album artwork.
 - VU meter uses simulated beat data when the system audio analyser is unavailable.
 
 ## License
 
 See [LICENSE](./LICENSE) (MIT).
+
+## Credits
+
+The settings window, error boundary and some Spicetify compatibility helpers follow patterns from
+[listening-stats](https://github.com/HeadshotInteractive/listening-stats) (MIT). No code was copied verbatim.
 
 ## Changelog
 

@@ -11,7 +11,8 @@
 
 set -euo pipefail
 
-SRC_DIR="${SRC_DIR:-$HOME/Downloads/plattenspieler}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SRC_DIR="${SRC_DIR:-$SCRIPT_DIR}"
 DEST_DIR="${DEST_DIR:-$HOME/.spicetify/CustomApps/plattenspieler}"
 BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.spicetify/CustomApps/.plattenspieler-backups}"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"

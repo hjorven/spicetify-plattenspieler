@@ -5,7 +5,7 @@ Manual checklist to run through after every update.
 ## 0. Syntax Check
 
 ```bash
-node --check ~/Downloads/plattenspieler/index.js
+node --check index.js
 ```
 
 - [ ] No errors → proceed
@@ -43,7 +43,7 @@ node --check ~/Downloads/plattenspieler/index.js
 - [ ] Pause → vinyl stops (animation pauses in place, no reset)
 - [ ] Status dot turns orange
 - [ ] Tonearm stays at current position (no jump)
-- [ ] VU bars freeze at current level (no movement)
+- [ ] VU bars and peaks fall to 0
 - [ ] Play → rotation continues smoothly
 - [ ] VU bars resume moving
 
@@ -60,11 +60,24 @@ node --check ~/Downloads/plattenspieler/index.js
 - [ ] Tonearm angle updates to match new position
 - [ ] No console errors
 
-## 8. Theme Switching
+## 8. Settings Window
 
-- [ ] Click "Modern" → dark theme with rounded corners, green accent
-- [ ] Click "2000s" → silver theme with square corners, blue accent
-- [ ] Theme persists across page reload (localStorage)
+- [ ] Gear icon (top right) opens the settings window
+- [ ] Esc, the X button and a click on the dark background close it; focus returns to the gear icon
+- [ ] Display → "Modern": dark theme with rounded corners, green accent
+- [ ] Display → "2000s": silver theme with square corners, blue accent
+- [ ] Display → "Spotify": colors follow the active Spicetify color scheme
+- [ ] Toggling "Show track info" / "Show VU meter" hides/shows the elements
+- [ ] Turntable → fixed RPM changes the rotation speed immediately
+- [ ] Turntable → "Reset to defaults" restores all settings
+- [ ] Settings persist across page reload (`localStorage` key `plattenspieler:settings`)
+- [ ] Old installs: previously chosen theme (`plattenspieler-theme`) is kept
+
+## 8b. Click & Keyboard
+
+- [ ] Click on the record toggles play/pause (when enabled)
+- [ ] Tab to the record, Space/Enter toggles play/pause
+- [ ] Tab to the progress bar, arrow keys seek ±5 s
 
 ## 9. Responsive
 
@@ -74,7 +87,7 @@ node --check ~/Downloads/plattenspieler/index.js
 
 ## 10. No Album Artwork (Edge Case)
 
-- [ ] Play track without cover → vinyl stays black, no crash, no errors
+- [ ] Play track without cover → black vinyl with colored label showing the track name, no errors
 
 ## 11. VU Meter (if analyser available)
 

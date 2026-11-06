@@ -5,6 +5,35 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.0] – Overhaul
+
+### Added
+- Settings window (gear icon) with Display / Turntable / About tabs, closable via Esc, X or background click
+- Third theme "Spotify" that follows the active Spicetify color scheme
+- Settings for fixed RPM (33⅓ / 45 / 78 or auto), VU meter on/off, track info on/off, click-to-play on/off
+- Click (or Space/Enter) on the record toggles play/pause
+- Keyboard seeking on the progress bar (arrow keys ±5 s, Home/End) with slider ARIA attributes
+- Fallback vinyl label when a track has no (loadable) album art
+- Error boundary with retry instead of Spotify's generic error page
+- `prefers-reduced-motion` support and visible keyboard focus
+- CI workflow: syntax check of `index.js` and `shellcheck` for `update.sh`
+
+### Changed
+- Player data is read via `Spicetify.Player.getDuration/getProgress/isPlaying` with fallback to `Player.data`
+- `spotify:image:` cover URIs are converted to `https://i.scdn.co/image/` URLs
+- VU meter is its own component, so the turntable no longer re-renders 20 times per second
+- Settings stored as one JSON object (`plattenspieler:settings`), old theme key is migrated
+- Seek uses milliseconds instead of a ratio
+- `update.sh` uses its own directory as source by default
+- Repository links point to `hjorven/spicetify-plattenspieler`
+
+### Fixed
+- Paused track was shown as playing after any `onprogress` event
+- Event listeners were not removed on unmount in every Spicetify version (now `removeEventListener`)
+- Global SVG gradient ids could collide with other apps (now prefixed)
+- Module-level `savedProgress` shared state between mounts
+
+
 ### Added
 - Stereo VU meter box on right side with peak hold and beat-responsive animation
 - Vinyl rotation speed adapts to song length (78 RPM for <2 min, 45 RPM for 2-4 min, 33⅓ RPM for >4 min)
