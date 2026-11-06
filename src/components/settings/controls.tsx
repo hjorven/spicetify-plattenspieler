@@ -38,11 +38,13 @@ interface OptionGroupProps<T extends string> {
   options: readonly { value: T; label: string }[];
   value: T;
   onChange(v: T): void;
+  /** "pills" (default) for settings rows, "tabs" for the compact header segment control */
+  variant?: "pills" | "tabs";
 }
 
-export function OptionGroup<T extends string>({ label, options, value, onChange }: OptionGroupProps<T>) {
+export function OptionGroup<T extends string>({ label, options, value, onChange, variant = "pills" }: OptionGroupProps<T>) {
   return (
-    <div className="plattenspieler-option-group" role="radiogroup" aria-label={label}>
+    <div className={`plattenspieler-option-group plattenspieler-option-group-${variant}`} role="radiogroup" aria-label={label}>
       {options.map((o) => (
         <button
           key={o.value}

@@ -1,21 +1,22 @@
 interface Props {
   length: number;
-  angle: number;
   pivotX: number;
   pivotY: number;
+  /** Rotation is applied to this element every frame by useTurntableMotion. */
+  armRef: { current: HTMLDivElement | null };
 }
 
 const HEIGHT = 36;
 
 /** SVG tonearm. Gradient ids are prefixed to avoid collisions with other apps on the page. */
-export function Tonearm({ length, angle, pivotX, pivotY }: Props) {
+export function Tonearm({ length, pivotX, pivotY, armRef }: Props) {
   const mid = HEIGHT / 2;
   const head = length * 0.8;
   return (
     <div
       className="plattenspieler-tonearm"
+      ref={armRef as import("react").Ref<HTMLDivElement>}
       style={{
-        transform: `rotate(${angle}deg)`,
         transformOrigin: `0 ${mid}px`,
         left: `${pivotX}px`,
         top: `${pivotY - mid}px`,

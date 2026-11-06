@@ -44,6 +44,8 @@ interface SpicetifyPlayer {
   getProgress?(): number;
   isPlaying?(): boolean;
   togglePlay?(): void;
+  next?(): void;
+  back?(): void;
   seek?(positionMs: number): void;
   addEventListener?(type: PlayerEvent, cb: (e?: { data?: unknown }) => void): void;
   removeEventListener?(type: PlayerEvent, cb: (e?: { data?: unknown }) => void): void;

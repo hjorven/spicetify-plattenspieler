@@ -68,13 +68,13 @@ export function SettingsModal({ settings, onChange, onClose }: Props) {
   if (tab === "display") {
     body = (
       <>
-        <SettingRow label="Theme" sublabel={'"Spotify" follows the colors of your Spicetify theme.'}>
-          <OptionGroup label="Theme" options={THEMES} value={settings.theme} onChange={(v) => set("theme", v)} />
+        <SettingRow label="Turntable finish" sublabel={'"Spotify" uses the colors of your Spicetify theme.'}>
+          <OptionGroup label="Turntable finish" options={THEMES} value={settings.theme} onChange={(v) => set("theme", v)} />
         </SettingRow>
-        <SettingRow label="Show track info" sublabel="Title, artist and progress bar below the turntable.">
-          <Toggle label="Show track info" value={settings.showInfo} onChange={(v) => set("showInfo", v)} />
+        <SettingRow label="Show stat tiles" sublabel="Speed, length, revolutions and finish above the track card.">
+          <Toggle label="Show stat tiles" value={settings.showInfo} onChange={(v) => set("showInfo", v)} />
         </SettingRow>
-        <SettingRow label="Show VU meter" sublabel="Stereo level meter on the right side of the turntable.">
+        <SettingRow label="Show VU meter" sublabel="Stereo level meter card.">
           <Toggle label="Show VU meter" value={settings.showVu} onChange={(v) => set("showVu", v)} />
         </SettingRow>
       </>
@@ -84,6 +84,9 @@ export function SettingsModal({ settings, onChange, onClose }: Props) {
       <>
         <SettingRow label="Speed (RPM)" sublabel="Auto: 78 below 2 min, 45 below 4 min, otherwise 33⅓.">
           <OptionGroup label="Speed" options={RPM_OPTIONS} value={settings.rpm} onChange={(v) => set("rpm", v)} />
+        </SettingRow>
+        <SettingRow label="Platter inertia" sublabel="The record spins up and slows down like a real belt-drive turntable.">
+          <Toggle label="Platter inertia" value={settings.inertia} onChange={(v) => set("inertia", v)} />
         </SettingRow>
         <SettingRow label="Click record to play/pause" sublabel="Clicking the vinyl toggles playback.">
           <Toggle
@@ -111,7 +114,7 @@ export function SettingsModal({ settings, onChange, onClose }: Props) {
           close this window.
         </p>
         <p>
-          <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="plattenspieler-footer-link">
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="plattenspieler-link">
             Source code on GitHub
           </a>
         </p>
@@ -121,7 +124,7 @@ export function SettingsModal({ settings, onChange, onClose }: Props) {
 
   const content = (
     <div
-      className={`plattenspieler-overlay plattenspieler-theme-${settings.theme}`}
+      className="plattenspieler-overlay"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

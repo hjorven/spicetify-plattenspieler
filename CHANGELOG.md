@@ -7,6 +7,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.0.0] – Complete rewrite
 
+### Animation
+- New animation engine: one `requestAnimationFrame` loop writes transforms via refs, no React re-render per frame
+- Platter integrates its own angle with spin-up/spin-down inertia (toggle in settings); pause, resume and RPM changes no longer make it jump
+- Tonearm follows an extrapolated position with a critically damped spring, lifts slightly while paused
+- Progress bar and time labels move continuously between Spotify's position updates
+- Loop stops once everything has settled; `prefers-reduced-motion` disables rotation and springs
+
+### UI
+- New layout in the style of listening-stats: sticky header with status pill, speed segment control and settings button; cards with eyebrow + title; stat tiles (speed, length, revolutions, finish)
+- Now-playing card with cover, album, progress bar and previous / play-pause / next
+- VU meter as a horizontal level card with peak markers and live/simulated indicator
+- Speed indicator LEDs and status LED on the plinth; page chrome follows the Spicetify color scheme
+
 ### Changed
 - Source rewritten in TypeScript + JSX under `src/`, split into components, hooks and pure logic modules
 - Build with esbuild into `dist/` (React is taken from `Spicetify.React`, not bundled); `dist/` is committed so installing needs no Node.js

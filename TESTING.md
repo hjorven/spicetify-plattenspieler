@@ -29,7 +29,7 @@ npm run check
 - [ ] Tonearm moves smoothly to starting position
 - [ ] Status dot turns green
 - [ ] Track name + artist name shown below turntable
-- [ ] VU meter box visible on right side, bars move with music
+- [ ] VU meter card visible, bars move with music (pill shows live or simulated)
 
 ## 4. Playback Progress
 
@@ -60,13 +60,23 @@ npm run check
 - [ ] Tonearm angle updates to match new position
 - [ ] No console errors
 
+## 7b. Animation
+
+- [ ] Play: record spins up smoothly (~1 s), pause: it slows down (~1.5 s) and stops without jumping back
+- [ ] With "Platter inertia" off, the record starts and stops immediately
+- [ ] Changing the speed in the header changes rotation smoothly, no jump
+- [ ] Tonearm moves continuously (no 1-second steps), swings smoothly after a seek or song change
+- [ ] Pause: tonearm lifts slightly (bigger shadow), drops back on play
+- [ ] Progress bar moves continuously
+- [ ] Paused and settled: CPU usage drops (loop stops)
+
 ## 8. Settings Window
 
 - [ ] Gear icon (top right) opens the settings window
 - [ ] Esc, the X button and a click on the dark background close it; focus returns to the gear icon
-- [ ] Display → "Modern": dark theme with rounded corners, green accent
-- [ ] Display → "2000s": silver theme with square corners, blue accent
-- [ ] Display → "Spotify": colors follow the active Spicetify color scheme
+- [ ] Display → "Modern": dark turntable with rounded corners, green LEDs
+- [ ] Display → "2000s": silver turntable with square corners, blue LEDs
+- [ ] Display → "Spotify": turntable colors follow the active Spicetify color scheme
 - [ ] Toggling "Show track info" / "Show VU meter" hides/shows the elements
 - [ ] Turntable → fixed RPM changes the rotation speed immediately
 - [ ] Turntable → "Reset to defaults" restores all settings

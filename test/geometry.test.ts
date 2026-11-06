@@ -19,10 +19,10 @@ describe("resolveRpm", () => {
 });
 
 describe("geometry", () => {
-  const g = computeGeometry(560, 430, 1200);
+  const g = computeGeometry(560, 430);
   it("places the pivot right of the record", () => {
-    expect(g.recordRadius).toBe(160);
-    expect(g.pivotX).toBeCloseTo(560 * 0.36 + 160 + 12);
+    expect(g.recordRadius).toBeCloseTo(159.6);
+    expect(g.pivotX).toBeCloseTo(560 * 0.36 + 159.6 + 12);
     expect(g.maxAngle).toBeGreaterThan(g.baseAngle);
   });
   it("moves the arm from outer to inner groove", () => {
@@ -31,6 +31,6 @@ describe("geometry", () => {
     expect(tonearmAngle(g, false, 0.5)).toBe(REST_ANGLE);
   });
   it("keeps a minimum arm length", () => {
-    expect(armLength({ ...g, recordRadius: 10 })).toBe(200);
+    expect(armLength({ ...g, recordRadius: 10 })).toBe(120);
   });
 });

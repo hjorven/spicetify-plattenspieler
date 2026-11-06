@@ -15,7 +15,7 @@ export function useTurntableGeometry(ref: { current: HTMLElement | null }): Geom
         const el = ref.current;
         if (!el) return;
         const rect = el.getBoundingClientRect();
-        setGeom(computeGeometry(rect.width, rect.height, window.innerWidth));
+        if (rect.width > 0 && rect.height > 0) setGeom(computeGeometry(rect.width, rect.height));
       });
     };
     recalc();

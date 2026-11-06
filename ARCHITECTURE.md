@@ -26,6 +26,7 @@ exposes the global `render()` that Spicetify calls.
 | `geometry.ts` | `computeGeometry()` (tonearm pivot and angle range), `tonearmAngle()`, `armLength()`, `resolveRpm()`, `SECONDS_PER_REVOLUTION` |
 | `player.ts` | `readPlayer()` → `TrackState`, `normalizeImageUrl()` (`spotify:image:<id>` → `https://i.scdn.co/image/<id>`) |
 | `vu.ts` | VU math: `levelsFromSpectrum`, `simulatedLevels`, `stepPlaying`, `stepPaused`, `findAnalyser` |
+| `motion.ts` | Animation math, frame-rate independent: `stepSpinSpeed` (spin-up/down), `advanceAngle`, `estimateProgress` (extrapolation between Spotify updates), `stepSpring` (critically damped spring) |
 
 ### `src/hooks/`
 
@@ -34,20 +35,45 @@ exposes the global `render()` that Spicetify calls.
 | `usePlayer()` | Subscribes to `songchange`, `onplaypause`, `onprogress`; returns `[track, { togglePlay, seek }]` |
 | `useSettings()` | Settings state, persisted on every change |
 | `useTurntableGeometry(ref)` | `ResizeObserver` + window resize, throttled via `requestAnimationFrame` |
-| `useVuLevels(isPlaying, trackKey)` | RAF loop for the VU meter, state throttled to ~20 fps, stops when paused bars reach 0 |
+| `useFrameLoop(cb, active, deps)` | Shared `requestAnimationFrame` loop; the callback gets `dt` and returns `false` to stop once settled |
+| `useTurntableMotion(...)` | The turntable's animation engine (see below); writes to the DOM via refs |
+| `useVuMeter(isPlaying, trackKey)` | Paints the VU bars via refs; reports whether a real analyser was found |
+| `useReducedMotion()` | Follows `prefers-reduced-motion` |
 
 ### `src/components/`
+
+Layout follows listening-stats: sticky header, then a two-column grid of cards (one column below 960 px).
 
 | Component | Purpose |
 |-----------|---------|
 | `ErrorBoundary` | Shows error, version and a retry button instead of Spotify's generic error page |
 | `RecordPlayer` | Page layout, wires hooks to children |
-| `Record` / `IdleRecord` | Spinning vinyl with cover; fallback label when the cover is missing or fails to load; acts as play/pause button |
+| `Header` | Title, status pill (Playing / Paused / Idle), speed segment control, settings button |
+| `Card`, `StatTile` | Section card (uppercase eyebrow + title) and key-figure tile |
+| `Turntable` | Plinth with LED, platter, tonearm, pivot and speed indicator; finish via theme class |
+| `Record` / `IdleRecord` | Vinyl with cover (fallback label when missing or broken); play/pause button |
 | `Tonearm` | SVG tonearm, gradient ids prefixed with `plattenspieler-` |
-| `VuMeter` | Stereo bars with peak hold; own state so only the meter re-renders ~20x/s |
-| `TrackInfo` | Title, artist, progress bar (`role=slider`, click + keyboard seek) |
-| `settings/SettingsModal` | Settings window via `createPortal` into `document.body`; tabs Display / Turntable / About; Esc, X, backdrop click close it; focus trap and focus restore |
-| `settings/controls` | `SettingRow`, `OptionGroup`, `Toggle` (native `Spicetify.ReactComponent.Toggle` or checkbox fallback) |
+| `NowPlaying` | Cover, title, artist, album, progress bar (`role=slider`), previous / play-pause / next |
+| `Levels` | Horizontal stereo VU bars with peak markers and a live/simulated pill |
+| `settings/SettingsModal` | Settings window via `createPortal`; tabs Display / Turntable / About; Esc, X, backdrop click; focus trap and restore |
+| `settings/controls` | `SettingRow`, `OptionGroup` (pills or tabs), `Toggle` (native or checkbox) |
+
+## Animation engine (`useTurntableMotion`)
+
+One `requestAnimationFrame` loop drives everything that moves. It writes `transform` directly to
+elements through refs, so React only re-renders on track or settings changes, never per frame.
+
+| Part | Logic |
+|------|-------|
+| Platter | Integrates its own angle: `angle += 360 / secondsPerRevolution × speed × dt`. `speed` eases from 0 to 1 in 0.9 s (spin-up) and back in 1.6 s (spin-down) with constant acceleration. Pausing, resuming and RPM changes therefore never make the record jump (the old CSS animation restarted or jumped when its duration changed). Inertia can be turned off in the settings. |
+| Progress | Spotify reports the position only every few hundred ms. The last report is stored as an anchor `{progress, at}` and extrapolated with `performance.now()` while playing. |
+| Tonearm | Target angle = `tonearmAngle(geom, hasTrack, progress)`. A critically damped spring (stiffness 45) glides the arm there without overshoot – continuous while playing, a smooth swing on seek or song change, back to rest without a track. |
+| Cue lift | While paused, a second spring lifts the arm: slight `translateY`/`scale` and a larger drop shadow (CSS variable `--plattenspieler-lift`). |
+| Progress bar / times | `scaleX(progress)` on the fill; time labels are rewritten only when the second changes. |
+| Stop condition | The loop ends when the record stands still and both springs have settled, and restarts on the next relevant change. |
+| Reduced motion | No rotation, arm and lift jump to their targets. |
+
+All of this math lives in `src/lib/motion.ts` and is unit-tested (spin-up time, one revolution per period, extrapolation, no overshoot, stability at low frame rates).
 
 ## Reading the player
 
@@ -78,9 +104,9 @@ Stored as JSON in `localStorage` under `plattenspieler:settings`. Unknown or inv
 
 ## Geometry
 
-Recomputed on mount and on every resize.
+Recomputed on mount and on every resize of the turntable element.
 
-- Record width: `min(320px, 55vw)` (must match the CSS)
+- Record width: 57 % of the turntable width (`RECORD_WIDTH_RATIO`, must match the CSS)
 - Record center: 36 % from left, 50 % from top of the turntable
 - Tonearm pivot: `centerX + recordRadius + 12`, `height * 0.18 + 20`
 - `baseAngle` (outer groove) = angle to center − 35°, `maxAngle` (inner groove) = angle to center − 2°
@@ -89,27 +115,24 @@ Recomputed on mount and on every resize.
 ## Rotation speed
 
 With `rpm: auto`: below 2 min → 78 RPM (0.769 s/rev), below 4 min → 45 RPM (1.333 s/rev), otherwise 33⅓ RPM
-(1.8 s/rev). The speed is applied as `animation-duration`; pause sets `animation-play-state: paused`, so the record
-stops in place instead of jumping back.
+(1.8 s/rev). The speed can also be fixed via the segment control in the header or in the settings.
 
 ## VU meter
 
 1. Looks for `Spicetify.Player.analyser` (also `_analyser`, `audioAnalyser`, `_audioAnalyser`): every frame for ~10 s, then every ~20 s
-2. Without an analyser, a beat-like signal is simulated
+2. Without an analyser, a beat-like signal is simulated (pill shows "simulated")
 3. Playing: instant attack, decay ×0.92 per frame, peak decay ×0.997
 4. Paused: decay ×0.88 / ×0.995 until everything is 0, then the loop stops
-5. Reset on track change
+5. Reset on track change; bars are painted via refs, no React state per frame
 
 ## Styling (`src/style.css`)
 
 Spicetify loads `style.css` from the app folder automatically; `build.mjs` copies it to `dist/`.
 
-- Themes are custom properties on `.plattenspieler-theme-modern`, `-2000s` and `-spotify` (the latter maps to
-  `--spice-*` variables with fallbacks). The settings overlay gets the same theme class because it is rendered
-  outside the container.
-- No `will-change` on the vinyl – avoids GPU crashes with faulty drivers (Flatpak/Wayland)
-- `prefers-reduced-motion` disables the rotation and transitions
-- Z-order: VU 5, tonearm 10, pivot 11, play indicator 20, toolbar 30, settings overlay 1000
+- Page, cards and settings window use Spotify's colors (`--spice-*` with fallbacks), so they match the active Spicetify theme.
+- The turntable has its own finishes: `.plattenspieler-theme-modern`, `-2000s`, `-spotify` set `--tt-*` variables.
+- No CSS animation on the vinyl; no `will-change` (avoids GPU crashes with faulty drivers on Flatpak/Wayland).
+- Z-order inside the turntable: tonearm 10, pivot 11. Header 20 (sticky), settings overlay 1000.
 
 ## Build
 

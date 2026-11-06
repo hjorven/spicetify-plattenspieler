@@ -5,6 +5,8 @@ const { useState, useEffect, useRef, useCallback } = Spicetify.React;
 
 export interface PlayerControls {
   togglePlay(): void;
+  next(): void;
+  back(): void;
   /** ratio 0–1 of the current track */
   seek(ratio: number): void;
 }
@@ -59,6 +61,22 @@ export function usePlayer(): [TrackState, PlayerControls] {
     }
   }, []);
 
+  const next = useCallback(() => {
+    try {
+      Spicetify.Player?.next?.();
+    } catch (err) {
+      console.warn("[plattenspieler] next failed", err);
+    }
+  }, []);
+
+  const back = useCallback(() => {
+    try {
+      Spicetify.Player?.back?.();
+    } catch (err) {
+      console.warn("[plattenspieler] back failed", err);
+    }
+  }, []);
+
   const durationMs = track.durationMs;
   const seek = useCallback(
     (ratio: number) => {
@@ -71,5 +89,5 @@ export function usePlayer(): [TrackState, PlayerControls] {
     [durationMs],
   );
 
-  return [track, { togglePlay, seek }];
+  return [track, { togglePlay, next, back, seek }];
 }

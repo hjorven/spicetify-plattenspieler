@@ -1,13 +1,17 @@
 import { usePlayer } from "../hooks/usePlayer";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useSettings } from "../hooks/useSettings";
 import { useTurntableGeometry } from "../hooks/useTurntableGeometry";
-import { armLength, resolveRpm, SECONDS_PER_REVOLUTION, tonearmAngle } from "../lib/geometry";
-import { ICON_GEAR, Icon } from "./Icon";
-import { IdleRecord, Record } from "./Record";
+import { useTurntableMotion } from "../hooks/useTurntableMotion";
+import { formatTime } from "../lib/format";
+import { resolveRpm, SECONDS_PER_REVOLUTION } from "../lib/geometry";
+import { RPM_OPTIONS, THEMES } from "../lib/settings";
+import { Card, StatTile } from "./Card";
+import { Header } from "./Header";
+import { Levels } from "./Levels";
+import { NowPlaying } from "./NowPlaying";
 import { REPO_URL, SettingsModal } from "./settings/SettingsModal";
-import { Tonearm } from "./Tonearm";
-import { TrackInfo } from "./TrackInfo";
-import { VuMeter } from "./VuMeter";
+import { Turntable } from "./Turntable";
 
 const { useState, useRef, useCallback } = Spicetify.React;
 
@@ -17,66 +21,65 @@ export function RecordPlayer() {
   const [showSettings, setShowSettings] = useState(false);
   const [track, controls] = usePlayer();
   const geom = useTurntableGeometry(turntableRef);
+  const reducedMotion = useReducedMotion();
   const closeSettings = useCallback(() => setShowSettings(false), []);
 
   const rpm = resolveRpm(settings.rpm, track.durationMs);
-  const statusClass = !track.hasTrack
-    ? " plattenspieler-play-indicator-dot-off"
-    : track.isPlaying
-      ? ""
-      : " plattenspieler-play-indicator-dot-paused";
+  const secondsPerRevolution = SECONDS_PER_REVOLUTION[rpm];
+  const motion = useTurntableMotion({ track, geom, secondsPerRevolution, inertia: settings.inertia, reducedMotion });
+
+  const status = !track.hasTrack ? "idle" : track.isPlaying ? "playing" : "paused";
+  const rpmLabel = RPM_OPTIONS.find((o) => o.value === rpm)?.label ?? rpm;
+  const themeLabel = THEMES.find((t) => t.value === settings.theme)?.label ?? settings.theme;
+  const revolutions = track.durationMs > 0 ? Math.round(track.durationMs / 1000 / secondsPerRevolution) : 0;
 
   return (
-    <div className={`plattenspieler-container plattenspieler-theme-${settings.theme}`}>
-      <div className="plattenspieler-toolbar">
-        <button
-          type="button"
-          className="plattenspieler-icon-btn"
-          onClick={() => setShowSettings(true)}
-          aria-label="Open settings"
-          title="Settings"
-        >
-          <Icon d={ICON_GEAR} />
-        </button>
-      </div>
+    <div className="plattenspieler-page">
+      <Header
+        status={status}
+        rpm={settings.rpm}
+        onRpmChange={(v) => setSettings({ ...settings, rpm: v })}
+        onOpenSettings={() => setShowSettings(true)}
+      />
 
-      <div className="plattenspieler-turntable" ref={turntableRef}>
-        <div
-          className="plattenspieler-play-indicator"
-          title={!track.hasTrack ? "Stopped" : track.isPlaying ? "Playing" : "Paused"}
+      <main className="plattenspieler-grid">
+        <Card
+          eyebrow="Deck"
+          title="Turntable"
+          className="plattenspieler-deck"
+          aside={<span className="plattenspieler-pill">{rpmLabel} RPM</span>}
         >
-          <div className={`plattenspieler-play-indicator-dot${statusClass}`} />
-        </div>
-
-        {track.hasTrack ? (
-          <Record
+          <Turntable
+            ref={turntableRef}
             track={track}
-            secondsPerRevolution={SECONDS_PER_REVOLUTION[rpm]}
-            onToggle={settings.clickToToggle ? controls.togglePlay : undefined}
+            rpm={rpm}
+            theme={settings.theme}
+            geom={geom}
+            motion={motion}
+            onToggle={settings.clickToToggle && track.hasTrack ? controls.togglePlay : undefined}
           />
-        ) : (
-          <IdleRecord />
-        )}
+        </Card>
 
-        <Tonearm
-          length={armLength(geom)}
-          angle={tonearmAngle(geom, track.hasTrack, track.progress)}
-          pivotX={geom.pivotX}
-          pivotY={geom.pivotY}
-        />
-        <div className="plattenspieler-pivot" style={{ left: `${geom.pivotX - 10}px`, top: `${geom.pivotY - 10}px` }} />
+        <div className="plattenspieler-side">
+          {settings.showInfo && (
+            <div className="plattenspieler-tiles">
+              <StatTile label="Speed" value={rpmLabel} unit="RPM" hint={settings.rpm === "auto" ? "auto, by song length" : "fixed"} />
+              <StatTile label="Length" value={track.hasTrack ? formatTime(track.durationMs) : "–"} hint="track duration" />
+              <StatTile label="Revolutions" value={revolutions || "–"} hint="for this song" />
+              <StatTile label="Style" value={themeLabel} hint="turntable finish" />
+            </div>
+          )}
+          <NowPlaying track={track} controls={controls} motion={motion} />
+          {settings.showVu && <Levels isPlaying={track.hasTrack && track.isPlaying} trackKey={track.key} />}
+        </div>
+      </main>
 
-        {settings.showVu && track.hasTrack && <VuMeter isPlaying={track.isPlaying} trackKey={track.key} />}
-      </div>
-
-      {settings.showInfo && track.hasTrack && <TrackInfo track={track} onSeek={controls.seek} />}
-
-      <div className="plattenspieler-footer">
-        <span>Made by Jorven · </span>
-        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="plattenspieler-footer-link">
+      <footer className="plattenspieler-footer">
+        <span>Made by Jorven · v{__VERSION__} · </span>
+        <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="plattenspieler-link">
           GitHub
         </a>
-      </div>
+      </footer>
 
       {showSettings && <SettingsModal settings={settings} onChange={setSettings} onClose={closeSettings} />}
     </div>

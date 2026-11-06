@@ -7,6 +7,8 @@ export interface Settings {
   showVu: boolean;
   showInfo: boolean;
   clickToToggle: boolean;
+  /** Realistic spin-up/spin-down of the platter */
+  inertia: boolean;
 }
 
 export const THEMES: readonly { value: Theme; label: string }[] = [
@@ -28,6 +30,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   showVu: true,
   showInfo: true,
   clickToToggle: true,
+  inertia: true,
 });
 
 export const STORAGE_KEY = "plattenspieler:settings";
@@ -53,6 +56,7 @@ export function sanitizeSettings(input: unknown): Settings {
   if (typeof o.showVu === "boolean") s.showVu = o.showVu;
   if (typeof o.showInfo === "boolean") s.showInfo = o.showInfo;
   if (typeof o.clickToToggle === "boolean") s.clickToToggle = o.clickToToggle;
+  if (typeof o.inertia === "boolean") s.inertia = o.inertia;
   return s;
 }
 

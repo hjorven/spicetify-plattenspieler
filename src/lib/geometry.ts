@@ -15,12 +15,15 @@ export interface Geometry {
 
 export const DEFAULT_GEOMETRY: Geometry = { pivotX: 280, pivotY: 90, recordRadius: 140, baseAngle: 120, maxAngle: 145 };
 
+/** Record diameter relative to the turntable width. Must match .plattenspieler-platter in style.css. */
+export const RECORD_WIDTH_RATIO = 0.57;
+
 /**
  * Computes the tonearm pivot and its angle range from the turntable size.
- * Must stay in sync with the CSS: record at 36% / 50%, width min(320px, 55vw).
+ * Must stay in sync with the CSS: record centered at 36% / 50%, width 57% of the turntable.
  */
-export function computeGeometry(width: number, height: number, viewportWidth: number): Geometry {
-  const recordRadius = Math.min(320, viewportWidth * 0.55) / 2;
+export function computeGeometry(width: number, height: number): Geometry {
+  const recordRadius = (width * RECORD_WIDTH_RATIO) / 2;
   const centerX = width * 0.36;
   const centerY = height * 0.5;
   const pivotX = centerX + recordRadius + 12;
@@ -35,7 +38,7 @@ export function tonearmAngle(geom: Geometry, hasTrack: boolean, progress: number
 }
 
 export function armLength(geom: Geometry): number {
-  return Math.max(200, geom.recordRadius * 1.7 + 40);
+  return Math.max(120, geom.recordRadius * 1.7 + 40);
 }
 
 /** Seconds per revolution for each speed. */
