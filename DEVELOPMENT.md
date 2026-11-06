@@ -52,6 +52,7 @@ npm run check
 | `./update.sh` | `npm run check`, back up the installed app, copy `dist/` into Spicetify, `spicetify apply` |
 | `./update.sh --no-apply` | Same, without `spicetify apply` |
 | `./update.sh --restart` | Same, then restart Spotify (Flatpak) |
+| `./install.sh --uninstall` | Remove the app from Spicetify again |
 
 `update.sh` installs to `~/.spicetify/CustomApps/plattenspieler`. If your Spicetify uses another folder
 (check with `spicetify -c`), set `DEST_DIR`:
@@ -74,12 +75,14 @@ src/
     player.ts               reading Spicetify.Player into a TrackState
     motion.ts               animation math (spin-up, springs, extrapolation)
     vu.ts                   peak meter math, analyser lookup
+    loudness.ts             song loudness from Spotify's audio analysis
   hooks/                    connect Spicetify / DOM to React
     usePlayer.ts            player events + controls
     useSettings.ts          settings state, persisted
     useTurntableGeometry.ts measures the turntable
     useTurntableMotion.ts   the animation engine
     useVuMeter.ts           peak meter painting
+    useAudioAnalysis.ts     loads and caches the audio analysis per track
     useFrameLoop.ts         shared requestAnimationFrame loop
     useReducedMotion.ts     prefers-reduced-motion
   components/               rendering
@@ -91,7 +94,8 @@ test/                       vitest unit tests for src/lib
 dev/preview.html            browser preview with a fake Spotify
 dist/                       build output that Spicetify loads (committed)
 build.mjs                   esbuild configuration
-update.sh                   local install script
+update.sh                   local install script (from your checkout)
+install.sh, install.ps1     one-line installers for users (download a release)
 ```
 
 ## How Spicetify loads the app
@@ -168,7 +172,7 @@ localStorage.removeItem("plattenspieler:settings")      // back to defaults, the
 
 - **Manual tests** in Spotify follow [TESTING.md](TESTING.md). Run the sections your change touches.
 - **CI** (`.github/workflows/ci.yml`) runs typecheck, tests, build, checks that `dist/` matches the build and runs
-  `shellcheck` on `update.sh` for every push to `master` and every pull request.
+  `shellcheck` on `update.sh` and `install.sh` for every push to `master` and every pull request.
 
 ## Spicetify APIs used
 
@@ -179,7 +183,8 @@ localStorage.removeItem("plattenspieler:settings")      // back to defaults, the
 | `Spicetify.Player.getDuration / getProgress / isPlaying` | position and state | values from `Player.data` |
 | `Spicetify.Player.addEventListener` (`songchange`, `onplaypause`, `onprogress`) | updates | one delayed re-read |
 | `Spicetify.Player.togglePlay / next / back / seek` | controls | ignored if missing |
-| `Spicetify.Player.analyser` (and variants) | real peak meter levels | simulated signal |
+| `Spicetify.Player.analyser` (and variants) | real-time peak meter levels | audio analysis |
+| `Spicetify.getAudioData(uri)` | song loudness (segments) for the peak meter | simulated signal |
 | `Spicetify.ReactComponent.Toggle` | native switches in settings | checkbox |
 
 Every call is guarded, because Spotify updates add and remove these regularly.
@@ -206,15 +211,22 @@ it in `RecordPlayer.tsx`. Check both the wide layout and the single-column layou
 1. Update the version in `package.json` (the app shows it in the footer and the About tab).
 2. Move the `[Unreleased]` entries in [CHANGELOG.md](CHANGELOG.md) under the new version with the date.
 3. `npm run check`, commit `package.json`, `CHANGELOG.md` and `dist/`.
-4. Tag and push:
+4. Tag and push (the tag must match the version in `package.json`):
 
    ```bash
    git tag v1.1.0
-   git push origin master --tags
+   git push origin master v1.1.0
    ```
 
-5. Create a GitHub release for the tag, paste the changelog section and attach `dist/index.js`, `dist/style.css` and
-   `dist/manifest.json`.
+5. The release workflow (`.github/workflows/release.yml`) builds, checks that the tag matches `package.json`, and
+   publishes a GitHub release with the changelog section, `plattenspieler.zip` and the three files. From then on
+   `install.sh` and `install.ps1` install this release by default.
+
+Test the installers before a release with a branch or tag:
+
+```bash
+PLATTENSPIELER_REF=my-branch PLATTENSPIELER_NO_APPLY=1 ./install.sh
+```
 
 ## Editor setup
 

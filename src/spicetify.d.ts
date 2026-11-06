@@ -56,6 +56,8 @@ interface SpicetifyGlobal {
   React: ReactNS;
   ReactDOM?: ReactDOMNS;
   Player?: SpicetifyPlayer;
+  /** Spotify's audio analysis (segments with loudness) for a track; current track if uri is omitted. */
+  getAudioData?(uri?: string): Promise<unknown>;
   ReactComponent?: {
     Toggle?: import("react").ComponentType<{ value: boolean; onSelected: (v: boolean) => void }>;
   };

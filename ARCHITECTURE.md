@@ -26,6 +26,7 @@ exposes the global `render()` that Spicetify calls.
 | `geometry.ts` | `computeGeometry()` (tonearm pivot and angle range), `tonearmAngle()`, `armLength()`, `resolveRpm()`, `SECONDS_PER_REVOLUTION` |
 | `player.ts` | `readPlayer()` → `TrackState`, `normalizeImageUrl()` (`spotify:image:<id>` → `https://i.scdn.co/image/<id>`) |
 | `vu.ts` | VU math: `levelsFromSpectrum`, `simulatedLevels`, `stepPlaying`, `stepPaused`, `findAnalyser` |
+| `loudness.ts` | Song loudness from the audio analysis: `parseSegments`, `findSegment`, `loudnessAt` (dB curve), `dbToLevel`, `levelAt` |
 | `motion.ts` | Animation math, frame-rate independent: `stepSpinSpeed` (spin-up/down), `advanceAngle`, `estimateProgress` (extrapolation between Spotify updates), `stepSpring` (critically damped spring) |
 
 ### `src/hooks/`
@@ -37,7 +38,8 @@ exposes the global `render()` that Spicetify calls.
 | `useTurntableGeometry(ref)` | `ResizeObserver` + window resize, throttled via `requestAnimationFrame` |
 | `useFrameLoop(cb, active, deps)` | Shared `requestAnimationFrame` loop; the callback gets `dt` and returns `false` to stop once settled |
 | `useTurntableMotion(...)` | The turntable's animation engine (see below); writes to the DOM via refs |
-| `useVuMeter(isPlaying, trackKey)` | Paints the VU bars via refs; reports whether a real analyser was found |
+| `useVuMeter(track)` | Paints the peak meter via refs; returns the source `live`, `track` or `simulated` |
+| `useAudioAnalysis(key, enabled)` | Loads `Spicetify.getAudioData` for the track, parses the segments, caches the last 8 tracks |
 | `useReducedMotion()` | Follows `prefers-reduced-motion` |
 
 ### `src/components/`
@@ -54,7 +56,7 @@ Layout follows listening-stats: sticky header, then a two-column grid of cards (
 | `Record` / `IdleRecord` | Vinyl with cover (fallback label when missing or broken); play/pause button |
 | `Tonearm` | SVG tonearm, gradient ids prefixed with `plattenspieler-` |
 | `NowPlaying` | Cover, title, artist, album, progress bar (`role=slider`), previous / play-pause / next |
-| `Levels` | Horizontal stereo VU bars with peak markers and a live/simulated pill |
+| `Levels` | Horizontal stereo VU bars with peak markers and a live/track/simulated pill |
 | `settings/SettingsModal` | Settings window via `createPortal`; tabs Display / Turntable / About; Esc, X, backdrop click; focus trap and restore |
 | `settings/controls` | `SettingRow`, `OptionGroup` (pills or tabs), `Toggle` (native or checkbox) |
 
@@ -119,11 +121,21 @@ With `rpm: auto`: below 2 min → 78 RPM (0.769 s/rev), below 4 min → 45 RPM (
 
 ## VU meter
 
-1. Looks for `Spicetify.Player.analyser` (also `_analyser`, `audioAnalyser`, `_audioAnalyser`): every frame for ~10 s, then every ~20 s
-2. Without an analyser, a beat-like signal is simulated (pill shows "simulated")
-3. Playing: instant attack, decay ×0.92 per frame, peak decay ×0.997
-4. Paused: decay ×0.88 / ×0.995 until everything is 0, then the loop stops
-5. Reset on track change; bars are painted via refs, no React state per frame
+The levels come from the first source that works:
+
+1. **live**: `Spicetify.Player.analyser` (also `_analyser`, `audioAnalyser`, `_audioAnalyser`), searched every frame
+   for ~10 s, then every ~20 s. Rarely exposed by Spotify.
+2. **track**: Spotify's audio analysis via `Spicetify.getAudioData(uri)`. It splits the song into short segments with
+   `loudness_start`, `loudness_max` and `loudness_max_time` (dB). `loudnessAt()` rebuilds the curve (rise to the maximum,
+   fall to the next segment's start), `dbToLevel()` maps -40..0 dB to 0..1. The position is extrapolated between
+   Spotify's updates exactly like the tonearm. The analysis is mono, so both channels show the same loudness.
+3. **simulated**: a beat-like signal, for items without analysis (podcasts, local files) or when the request fails.
+
+Then:
+
+- Playing: instant attack, decay ×0.92 per frame, peak decay ×0.997
+- Paused: decay ×0.88 / ×0.995 until everything is 0, then the loop stops
+- Reset on track change; bars are painted via refs, no React state per frame
 
 ## Styling (`src/style.css`)
 
@@ -146,12 +158,12 @@ Spicetify loads `style.css` from the app folder automatically; `build.mjs` copie
 to `dist/`. `__VERSION__` is replaced with the version from `package.json`.
 
 CI (`.github/workflows/ci.yml`) runs typecheck, unit tests, build, checks that the committed `dist/` matches the
-build, and runs `shellcheck` on `update.sh`.
+build, and runs `shellcheck` on `update.sh` and `install.sh`. `release.yml` publishes a GitHub release for every `v*` tag.
 
 ## Known Issues & Limitations
 
 1. **Spotify Flatpak GPU crash** (`GPU process isn't usable`) – environment issue, not app-related. Workaround: `--disable-gpu`.
-2. **VU meter analyser** is not exposed by most Spotify versions – the meter then shows the simulated signal.
+2. **Peak meter** uses the song's audio analysis, which is mono and has no frequency bands; a real-time analyser is not exposed by most Spotify versions.
 3. **Tonearm geometry** may need offset adjustment for extreme viewport sizes.
 4. **DevTools** are available at `http://127.0.0.1:8088` after `spicetify enable-devtools`.
 

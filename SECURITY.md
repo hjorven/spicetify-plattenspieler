@@ -24,13 +24,15 @@ the changelog unless you prefer not to be.
 ## Scope
 
 - the custom app (`src/`, built into `dist/`)
-- the install script `update.sh`
+- the installers `install.sh` and `install.ps1` and the developer script `update.sh`
 - the CI workflow in `.github/workflows/`
 
 ## Data and privacy
 
-- The app makes **no network requests of its own**. The only remote content is the album art, loaded from Spotify's
-  image CDN (`i.scdn.co`) through the URLs Spotify already provides.
+- The app only talks to Spotify. Album art is loaded from Spotify's image CDN (`i.scdn.co`) through the URLs Spotify
+  already provides, and the peak meter asks Spotify for the current song's audio analysis through
+  `Spicetify.getAudioData`, using your existing Spotify session.
+- The installers download only from this GitHub repository (`raw.githubusercontent.com`, `api.github.com`).
 - Settings are stored in `localStorage` under `plattenspieler:settings` in your Spotify client and never leave your
   computer.
 - No analytics, no tracking, no accounts, no API keys.

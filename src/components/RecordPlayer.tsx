@@ -70,7 +70,7 @@ export function RecordPlayer() {
             </div>
           )}
           <NowPlaying track={track} controls={controls} motion={motion} />
-          {settings.showVu && <Levels isPlaying={track.hasTrack && track.isPlaying} trackKey={track.key} />}
+          {settings.showVu && <Levels track={track} />}
         </div>
       </main>
 
