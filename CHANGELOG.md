@@ -5,6 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Documentation
+- New README with screenshots, install/update/uninstall for Linux, macOS and Windows, troubleshooting
+- New CONTRIBUTING.md (workflow, code style, adding a finish), DEVELOPMENT.md (setup, commands, debugging, releasing), SECURITY.md, CODE_OF_CONDUCT.md
+- Issue templates (bug, idea, question) and a pull request template
+- `dev/preview.html`: browser preview with a fake Spotify player for working without Spotify (`npm run preview`)
+
 ### Added
 - Silver finish is back as a full hi-fi skin modeled on real early-80s silver components: brushed aluminum, VFD displays, segmented peak power meter with scale, bevelled keys with indicator LEDs, amber badge, chrome feet
 

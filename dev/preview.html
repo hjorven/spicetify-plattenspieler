@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plattenspieler preview</title>
+    <!--
+      Browser preview without Spotify.
+      1. npm ci && npm run build   (or npm run watch)
+      2. Open this file in Chrome/Chromium/Firefox.
+      A fake Spicetify object plays a 3:20 test track. Use the controls in the
+      bottom-left corner to switch tracks, pause and simulate a missing cover.
+    -->
+    <link rel="stylesheet" href="../dist/style.css" />
+    <style>
+      html, body, #root { margin: 0; height: 100%; font-family: system-ui, sans-serif; background: #121212; }
+      #devbar { position: fixed; left: 8px; bottom: 8px; z-index: 2000; display: flex; gap: 6px; }
+      #devbar button { font: 12px system-ui; padding: 4px 8px; border-radius: 4px; border: 1px solid #555; background: #222; color: #ddd; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="devbar">
+      <button data-action="toggle">play / pause</button>
+      <button data-action="next">next track</button>
+      <button data-action="noart">no cover</button>
+      <button data-action="stop">no track</button>
+    </div>
+
+    <script src="../node_modules/react/umd/react.development.js"></script>
+    <script src="../node_modules/react-dom/umd/react-dom.development.js"></script>
+    <script>
+      // ── Fake album art ──
+      function cover(hueA, hueB) {
+        const c = document.createElement("canvas");
+        c.width = c.height = 600;
+        const g = c.getContext("2d");
+        const grad = g.createLinearGradient(0, 0, 600, 600);
+        grad.addColorStop(0, `hsl(${hueA} 90% 60%)`);
+        grad.addColorStop(1, `hsl(${hueB} 70% 30%)`);
+        g.fillStyle = grad;
+        g.fillRect(0, 0, 600, 600);
+        g.fillStyle = "rgba(255,255,255,0.85)";
+        g.beginPath();
+        g.arc(300, 240, 90, 0, Math.PI * 2);
+        g.fill();
+        return c.toDataURL("image/jpeg", 0.9);
+      }
+
+      const TRACKS = [
+        { name: "Midnight Groove", artist: "The Vinyl Collective", album: "Night Sessions", duration: 200000, art: cover(15, 270) },
+        { name: "Short Spin", artist: "Seven Inch", album: "Singles", duration: 95000, art: cover(190, 230) },
+        { name: "Long Player", artist: "Side B", album: "Gatefold", duration: 420000, art: cover(45, 10) },
+      ];
+
+      // ── Fake Spicetify.Player ──
+      const listeners = {};
+      const emit = (type, data) => (listeners[type] || []).forEach((cb) => cb({ data }));
+      let index = 0, playing = true, position = 30000, lastTick = performance.now(), noArt = false, stopped = false;
+
+      function item() {
+        if (stopped) return undefined;
+        const t = TRACKS[index];
+        return {
+          name: t.name,
+          uri: "spotify:track:preview" + index,
+          artists: [{ name: t.artist }],
+          album: { name: t.album, images: noArt ? [] : [{ url: t.art }] },
+        };
+      }
+
+      const Player = {
+        get data() { return { item: item(), duration: TRACKS[index].duration, isPaused: !playing }; },
+        getDuration: () => TRACKS[index].duration,
+        getProgress: () => position,
+        isPlaying: () => playing && !stopped,
+        togglePlay() { playing = !playing; emit("onplaypause"); },
+        next() { index = (index + 1) % TRACKS.length; position = 0; emit("songchange"); },
+        back() { position = 0; emit("onprogress", position); },
+        seek(ms) { position = ms; emit("onprogress", position); },
+        addEventListener(type, cb) { (listeners[type] = listeners[type] || []).push(cb); },
+        removeEventListener(type, cb) { listeners[type] = (listeners[type] || []).filter((x) => x !== cb); },
+      };
+
+      // Advance the position like Spotify does (it reports roughly every 500 ms).
+      setInterval(() => {
+        const now = performance.now();
+        if (playing && !stopped) {
+          position += now - lastTick;
+          if (position >= TRACKS[index].duration) Player.next();
+          else emit("onprogress", position);
+        }
+        lastTick = now;
+      }, 500);
+
+      window.Spicetify = { React, ReactDOM, Player, ReactComponent: {} };
+
+      document.getElementById("devbar").addEventListener("click", (e) => {
+        const action = e.target.dataset.action;
+        if (action === "toggle") Player.togglePlay();
+        if (action === "next") { stopped = false; Player.next(); }
+        if (action === "noart") { noArt = !noArt; emit("songchange"); }
+        if (action === "stop") { stopped = !stopped; emit("songchange"); }
+      });
+    </script>
+    <script src="../dist/index.js"></script>
+    <script>
+      ReactDOM.createRoot(document.getElementById("root")).render(render());
+    </script>
+  </body>
+</html>

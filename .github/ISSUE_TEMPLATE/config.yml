@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Spicetify documentation
+    url: https://spicetify.app/docs/getting-started
+    about: Problems with installing or applying Spicetify itself
+  - name: Report a security problem
+    url: https://github.com/hjorven/spicetify-plattenspieler/security/advisories/new
+    about: Please report vulnerabilities privately

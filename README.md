@@ -1,101 +1,118 @@
-# Plattenspieler – Spicetify Custom App
+# Plattenspieler
 
-A Spicetify custom app that shows the current Spotify album art as a spinning vinyl
-record on a turntable with a moving tonearm – including play/pause detection,
-clickable progress bar, stereo VU meter, and responsive layout.
+A [Spicetify](https://spicetify.app) custom app that puts the song you are listening to on a turntable: the album art
+spins as a vinyl record, the tonearm tracks the song position, and a peak meter dances along.
 
-![Screenshot](assets/screenshot.png)
-<!-- TODO: Add screenshot, see assets/README.md -->
+![Plattenspieler, Modern finish](docs/screenshots/modern.png)
 
-> **GitHub:** `https://github.com/hjorven/spicetify-plattenspieler`
+<table>
+  <tr>
+    <td><img src="docs/screenshots/silver.png" alt="Silver finish" /></td>
+    <td><img src="docs/screenshots/spotify.png" alt="Spotify finish" /></td>
+    <td><img src="docs/screenshots/settings.png" alt="Settings window" /></td>
+  </tr>
+  <tr>
+    <td align="center">Silver finish</td>
+    <td align="center">Spotify finish</td>
+    <td align="center">Settings window</td>
+  </tr>
+</table>
 
 ## Features
 
-- Album art as a spinning vinyl record (speed adapts to song length: 33⅓ / 45 / 78 RPM)
-- SVG tonearm with metallic gradient, moves from outer to inner groove matching song progress
-- Stereo VU meter box with peak hold (right side of turntable)
-- Clickable progress bar with seek support
-- Play/pause detection (green/orange status dot), click the record to play/pause
-- Settings window (gear icon, top right) with tabs for display, turntable and about
-- Three finishes: Modern (dark, rounded, green), Silver (the whole page as brushed-aluminum hi-fi gear of the early 80s, with VFD displays, peak meter and bevelled keys) and Spotify (follows your Spicetify color scheme)
-- Fixed or automatic speed (33⅓ / 45 / 78 RPM), VU meter and track info can be toggled
-- Fallback vinyl label when a track has no album art
-- Keyboard support: Space/Enter on the record, arrow keys on the progress bar, Esc closes the settings
-- Respects `prefers-reduced-motion`
-- Responsive geometry via `ResizeObserver`
-- No build tool required – pure `React.createElement`
+- **Spinning record** with the current album art, real spin-up and spin-down like a belt-drive turntable
+- **Tonearm** that glides from the outer to the inner groove as the song plays and lifts slightly while paused
+- **Speed** 33⅓ / 45 / 78 RPM, automatic by song length or fixed, switchable in the header
+- **Now playing card** with cover, title, artist, album, seekable progress bar and previous / play-pause / next
+- **Peak meter** for the left and right channel (uses Spotify's analyser when available, otherwise a simulated signal)
+- **Three finishes**
+  - *Modern*: dark turntable with green LEDs in a Spotify-style layout
+  - *Silver*: the whole page as brushed-aluminum hi-fi gear of the early 80s, with glowing VFD displays and bevelled keys
+  - *Spotify*: follows the colors of your Spicetify theme
+- **Settings window** for finish, speed, inertia, tiles, peak meter and click-to-play
+- **Keyboard support**: Space/Enter on the record, arrow keys on the progress bar, Esc closes the settings
+- Respects `prefers-reduced-motion`, works in narrow windows, no data leaves your computer
+
+## Requirements
+
+- Spotify desktop app
+- [Spicetify](https://spicetify.app/docs/getting-started) installed and applied at least once
 
 ## Installation
 
-The ready-built app lives in `dist/`, so no Node.js is needed to install it.
+The ready-built app is in `dist/`, so you do not need Node.js to install it.
+
+**Linux / macOS**
 
 ```bash
 git clone https://github.com/hjorven/spicetify-plattenspieler.git
-mkdir -p "$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
-cp spicetify-plattenspieler/dist/index.js spicetify-plattenspieler/dist/style.css spicetify-plattenspieler/dist/manifest.json \
-   "$(dirname "$(spicetify -c)")/CustomApps/plattenspieler/"
+APP_DIR="$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
+mkdir -p "$APP_DIR"
+cp spicetify-plattenspieler/dist/index.js spicetify-plattenspieler/dist/style.css spicetify-plattenspieler/dist/manifest.json "$APP_DIR/"
 spicetify config custom_apps plattenspieler
 spicetify apply
 ```
 
-`spicetify -c` prints the path of your Spicetify config file; the `CustomApps` folder sits next to it
-(usually `~/.config/spicetify/CustomApps` or `~/.spicetify/CustomApps`).
+**Windows (PowerShell)**
 
-Restart Spotify. The app appears in the sidebar and is accessible at `/plattenspieler`.
+```powershell
+git clone https://github.com/hjorven/spicetify-plattenspieler.git
+$AppDir = Join-Path (Split-Path (spicetify -c)) "CustomApps\plattenspieler"
+New-Item -ItemType Directory -Force -Path $AppDir | Out-Null
+Copy-Item spicetify-plattenspieler\dist\index.js, spicetify-plattenspieler\dist\style.css, spicetify-plattenspieler\dist\manifest.json -Destination $AppDir
+spicetify config custom_apps plattenspieler
+spicetify apply
+```
 
-## Development
+After `spicetify apply`, Spotify restarts and **Plattenspieler** appears in the sidebar.
 
-Requires Node.js 20 or newer.
+## Updating
 
 ```bash
-npm ci              # install dev dependencies
-npm run watch       # rebuild dist/ on every change
-npm run check       # typecheck + unit tests + production build
-./update.sh         # check, copy dist/ into Spicetify, back up the old version, spicetify apply
+cd spicetify-plattenspieler
+git pull
+APP_DIR="$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
+cp dist/index.js dist/style.css dist/manifest.json "$APP_DIR/"
+spicetify apply
 ```
 
-`update.sh` installs to `~/.spicetify/CustomApps/plattenspieler` by default. Override it with
-`DEST_DIR`, for example:
+## Uninstalling
 
 ```bash
-DEST_DIR="$HOME/.config/spicetify/CustomApps/plattenspieler" ./update.sh
+spicetify config custom_apps plattenspieler-
+rm -rf "$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
+spicetify apply
 ```
 
-Commit the rebuilt `dist/` together with your source changes; CI fails if it is outdated.
+## Troubleshooting
 
-### Project structure
+| Problem | What to do |
+|---------|-----------|
+| The app does not show up in the sidebar | Run `spicetify config custom_apps` and check that `plattenspieler` is listed, then `spicetify apply` again. |
+| "Plattenspieler crashed" page | Click **Try again**. If it happens again, open an [issue](https://github.com/hjorven/spicetify-plattenspieler/issues/new/choose) and paste the error shown on the page. |
+| Peak meter says "simulated" | Most Spotify versions do not expose an audio analyser. The meter then shows a beat-like signal. |
+| Spotify (Flatpak) crashes with `GPU process isn't usable` | Not caused by this app. Start Spotify with `--disable-gpu`. |
+| After a Spotify update the app is gone | Spotify updates remove Spicetify. Run `spicetify backup apply`. |
 
-```
-src/
-  index.tsx                  entry point, exports render()
-  components/                React components (TSX)
-    RecordPlayer.tsx         page layout
-    Record.tsx, Tonearm.tsx, VuMeter.tsx, TrackInfo.tsx
-    settings/                settings window and its controls
-    ErrorBoundary.tsx
-  hooks/                     usePlayer, useSettings, useTurntableGeometry, useVuLevels
-  lib/                       pure logic without React (tested): format, settings, geometry, player, vu
-  style.css
-test/                        vitest unit tests for src/lib
-dist/                        build output that Spicetify loads
-```
+## Contributing
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for details and [TESTING.md](./TESTING.md) for the manual test checklist.
+Contributions are welcome, from bug reports and ideas to code, new finishes and documentation.
 
-## Known Limitations
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to report bugs, suggest features and open a pull request
+- [DEVELOPMENT.md](DEVELOPMENT.md): set up the project, build, test and debug
+- [ARCHITECTURE.md](ARCHITECTURE.md): how the app works inside (player, animation engine, styling)
+- [TESTING.md](TESTING.md): manual test checklist for Spotify
 
-- Spotify Flatpak installations may experience GPU crashes on song start (not caused by this app) – workaround: `--disable-gpu` flag.
-- VU meter uses simulated beat data when the system audio analyser is unavailable.
+## Privacy
 
-## License
-
-See [LICENSE](./LICENSE) (MIT).
+The app makes no network requests of its own apart from loading cover images from Spotify's CDN. Settings are stored
+in `localStorage` in your Spotify client. See [SECURITY.md](SECURITY.md).
 
 ## Credits
 
-The settings window, error boundary and some Spicetify compatibility helpers follow patterns from
+Layout, settings window and parts of the project setup follow patterns from
 [listening-stats](https://github.com/HeadshotInteractive/listening-stats) (MIT). No code was copied verbatim.
 
-## Changelog
+## License
 
-See [CHANGELOG.md](./CHANGELOG.md).
+[MIT](LICENSE). See [CHANGELOG.md](CHANGELOG.md) for the release history.
