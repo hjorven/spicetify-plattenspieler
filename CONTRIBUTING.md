@@ -31,7 +31,7 @@ Read the [README](README.md) and its troubleshooting table first, then search th
 
 Before you open a bug report:
 
-1. Make sure you use the latest version (`git pull`, copy `dist/` again, `spicetify apply`).
+1. Make sure you use the latest version (run the install command from the [README](README.md#installation) again).
 2. Check whether the bug also happens with a different finish and with other custom apps or extensions disabled.
 3. Search the existing [issues](https://github.com/hjorven/spicetify-plattenspieler/issues?q=label%3Abug).
 

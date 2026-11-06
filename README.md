@@ -24,7 +24,8 @@ spins as a vinyl record, the tonearm tracks the song position, and a peak meter 
 - **Tonearm** that glides from the outer to the inner groove as the song plays and lifts slightly while paused
 - **Speed** 33⅓ / 45 / 78 RPM, automatic by song length or fixed, switchable in the header
 - **Now playing card** with cover, title, artist, album, seekable progress bar and previous / play-pause / next
-- **Peak meter** for the left and right channel (uses Spotify's analyser when available, otherwise a simulated signal)
+- **Peak meter** that follows the real loudness of the song, from Spotify's audio analysis and synced to the position
+  (live analyser when Spotify exposes one, a simulated signal for tracks without analysis)
 - **Three finishes**
   - *Modern*: dark turntable with green LEDs in a Spotify-style layout
   - *Silver*: the whole page as brushed-aluminum hi-fi gear of the early 80s, with glowing VFD displays and bevelled keys
@@ -40,48 +41,68 @@ spins as a vinyl record, the tonearm tracks the song position, and a peak meter 
 
 ## Installation
 
-The ready-built app is in `dist/`, so you do not need Node.js to install it.
+One command installs the latest release. Run it again later to update. You do not need Git or Node.js.
 
 **Linux / macOS**
 
 ```bash
-git clone https://github.com/hjorven/spicetify-plattenspieler.git
-APP_DIR="$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
-mkdir -p "$APP_DIR"
-cp spicetify-plattenspieler/dist/index.js spicetify-plattenspieler/dist/style.css spicetify-plattenspieler/dist/manifest.json "$APP_DIR/"
-spicetify config custom_apps plattenspieler
-spicetify apply
+curl -fsSL https://raw.githubusercontent.com/hjorven/spicetify-plattenspieler/master/install.sh | bash
 ```
 
 **Windows (PowerShell)**
 
 ```powershell
-git clone https://github.com/hjorven/spicetify-plattenspieler.git
-$AppDir = Join-Path (Split-Path (spicetify -c)) "CustomApps\plattenspieler"
-New-Item -ItemType Directory -Force -Path $AppDir | Out-Null
-Copy-Item spicetify-plattenspieler\dist\index.js, spicetify-plattenspieler\dist\style.css, spicetify-plattenspieler\dist\manifest.json -Destination $AppDir
+iwr -useb https://raw.githubusercontent.com/hjorven/spicetify-plattenspieler/master/install.ps1 | iex
+```
+
+The installer finds your Spicetify `CustomApps` folder, downloads `index.js`, `style.css` and `manifest.json`,
+registers the app and runs `spicetify apply`. Spotify restarts and **Plattenspieler** appears in the sidebar.
+If `spicetify apply` fails because Spotify was updated, it runs `spicetify backup apply` for you.
+
+Options (environment variables):
+
+| Variable | Effect |
+|----------|--------|
+| `PLATTENSPIELER_REF` | Install a specific version, e.g. `v1.1.0` or `master` (default: latest release, otherwise `master`) |
+| `PLATTENSPIELER_NO_APPLY=1` | Copy and register only, do not run `spicetify apply` |
+| `SPICETIFY_CONFIG` | Your Spicetify config folder, if it is not the default |
+
+Example: install the current development version on Linux / macOS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hjorven/spicetify-plattenspieler/master/install.sh | PLATTENSPIELER_REF=master bash
+```
+
+<details>
+<summary>Manual installation</summary>
+
+Download `plattenspieler.zip` from the [latest release](https://github.com/hjorven/spicetify-plattenspieler/releases/latest)
+(or the three files from `dist/`) and put them into the `CustomApps/plattenspieler` folder next to your Spicetify
+config (`spicetify path -c` shows where it is). Then:
+
+```bash
 spicetify config custom_apps plattenspieler
 spicetify apply
 ```
 
-After `spicetify apply`, Spotify restarts and **Plattenspieler** appears in the sidebar.
+</details>
 
 ## Updating
 
-```bash
-cd spicetify-plattenspieler
-git pull
-APP_DIR="$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
-cp dist/index.js dist/style.css dist/manifest.json "$APP_DIR/"
-spicetify apply
-```
+Run the install command again.
 
 ## Uninstalling
 
+**Linux / macOS**
+
 ```bash
-spicetify config custom_apps plattenspieler-
-rm -rf "$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
-spicetify apply
+curl -fsSL https://raw.githubusercontent.com/hjorven/spicetify-plattenspieler/master/install.sh | bash -s -- --uninstall
+```
+
+**Windows (PowerShell)**
+
+```powershell
+$env:PLATTENSPIELER_UNINSTALL = "1"; iwr -useb https://raw.githubusercontent.com/hjorven/spicetify-plattenspieler/master/install.ps1 | iex
 ```
 
 ## Troubleshooting
@@ -90,7 +111,8 @@ spicetify apply
 |---------|-----------|
 | The app does not show up in the sidebar | Run `spicetify config custom_apps` and check that `plattenspieler` is listed, then `spicetify apply` again. |
 | "Plattenspieler crashed" page | Click **Try again**. If it happens again, open an [issue](https://github.com/hjorven/spicetify-plattenspieler/issues/new/choose) and paste the error shown on the page. |
-| Peak meter says "simulated" | Most Spotify versions do not expose an audio analyser. The meter then shows a beat-like signal. |
+| Peak meter says "simulated" | Spotify has no audio analysis for this item (podcasts, local files) or your Spicetify version has no `getAudioData`. The meter then shows a beat-like signal. "track" means real song loudness. |
+| Installer says "Spicetify CLI not found" | Install Spicetify first and open a new terminal: [spicetify.app](https://spicetify.app/docs/getting-started). |
 | Spotify (Flatpak) crashes with `GPU process isn't usable` | Not caused by this app. Start Spotify with `--disable-gpu`. |
 | After a Spotify update the app is gone | Spotify updates remove Spicetify. Run `spicetify backup apply`. |
 
@@ -105,12 +127,13 @@ Contributions are welcome, from bug reports and ideas to code, new finishes and 
 
 ## Privacy
 
-The app makes no network requests of its own apart from loading cover images from Spotify's CDN. Settings are stored
+The app only talks to Spotify itself: cover images come from Spotify's CDN, and the peak meter asks Spotify (through
+Spicetify) for the audio analysis of the current song. Settings are stored
 in `localStorage` in your Spotify client. See [SECURITY.md](SECURITY.md).
 
 ## Credits
 
-Layout, settings window and parts of the project setup follow patterns from
+Layout, settings window, the one-line installers and parts of the project setup follow patterns from
 [listening-stats](https://github.com/HeadshotInteractive/listening-stats) (MIT). No code was copied verbatim.
 
 ## License

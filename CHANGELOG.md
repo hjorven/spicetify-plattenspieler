@@ -5,6 +5,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- One-line installers like listening-stats: `install.sh` (Linux/macOS) and `install.ps1` (Windows) download the latest release, find the Spicetify `CustomApps` folder, register the app and run `spicetify apply` with automatic `backup apply` recovery; both can uninstall
+- Release workflow: pushing a `v*` tag builds the app and publishes a GitHub release with `plattenspieler.zip` and the three files
+- Peak meter shows the real loudness of the playing song from Spotify's audio analysis (`Spicetify.getAudioData`), synced to the extrapolated position; pill shows `live`, `track` or `simulated`
+- `dev/preview.html` fakes `getAudioData` so the meter can be checked in the browser
+
 ### Documentation
 - New README with screenshots, install/update/uninstall for Linux, macOS and Windows, troubleshooting
 - New CONTRIBUTING.md (workflow, code style, adding a finish), DEVELOPMENT.md (setup, commands, debugging, releasing), SECURITY.md, CODE_OF_CONDUCT.md

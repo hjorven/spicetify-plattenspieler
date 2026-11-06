@@ -29,7 +29,7 @@ npm run check
 - [ ] Tonearm moves smoothly to starting position
 - [ ] Status dot turns green
 - [ ] Track name + artist name shown below turntable
-- [ ] VU meter card visible, bars move with music (pill shows live or simulated)
+- [ ] Peak meter card visible, bars move with music (pill shows live, track or simulated)
 
 ## 4. Playback Progress
 
@@ -100,11 +100,20 @@ npm run check
 
 - [ ] Play track without cover → black vinyl with colored label showing the track name, no errors
 
-## 11. VU Meter (if analyser available)
+## 11. Peak Meter
 
-- [ ] Bars respond to actual audio (frequency data)
+- [ ] Music track: pill shows "track", bars follow the song (quiet intro low, chorus high, breaks drop)
+- [ ] Seek to a loud and a quiet part: the bars follow at once
+- [ ] Skip to a podcast or local file: pill shows "simulated", no errors in the console
 - [ ] Peak lines hold briefly then decay
-- [ ] Left/right channels show independent movement
+- [ ] If an analyser is available (pill "live"): bars respond to actual audio, left/right move independently
+
+## 11a. Installer
+
+- [ ] Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/hjorven/spicetify-plattenspieler/master/install.sh | bash` installs, Spotify restarts, app in sidebar
+- [ ] Windows: `iwr -useb https://raw.githubusercontent.com/hjorven/spicetify-plattenspieler/master/install.ps1 | iex` does the same
+- [ ] Running it again updates without errors
+- [ ] Uninstall command removes the app from the sidebar and the `CustomApps` folder
 
 ## 12. Stability (Flatpak)
 

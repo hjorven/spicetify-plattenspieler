@@ -1,4 +1,5 @@
-import { useVuMeter } from "../hooks/useVuMeter";
+import { useVuMeter, type VuSource } from "../hooks/useVuMeter";
+import type { TrackState } from "../lib/player";
 import { Card } from "./Card";
 
 type DivRef = import("react").Ref<HTMLDivElement>;
@@ -16,15 +17,22 @@ function Channel({ name, bar, peak }: { name: string; bar: DivRef; peak: DivRef 
 }
 
 /** Stereo level meter card. Bars are painted by useVuMeter without React re-renders. */
-export function Levels({ isPlaying, trackKey }: { isPlaying: boolean; trackKey: string }) {
-  const [refs, live] = useVuMeter(isPlaying, trackKey);
+const SOURCE_LABEL: Record<VuSource, { text: string; title: string }> = {
+  live: { text: "live", title: "Reading Spotify's audio analyser" },
+  track: { text: "track", title: "Loudness of this song from Spotify's audio analysis (mono)" },
+  simulated: { text: "simulated", title: "No loudness data for this track, showing a simulated signal" },
+};
+
+export function Levels({ track }: { track: TrackState }) {
+  const [refs, source] = useVuMeter(track);
+  const label = SOURCE_LABEL[source];
   return (
     <Card
       eyebrow="Levels"
       title="Peak meter"
       aside={
-        <span className="plattenspieler-pill" title={live ? "Reading Spotify's audio analyser" : "No analyser available"}>
-          {live ? "live" : "simulated"}
+        <span className="plattenspieler-pill" title={label.title}>
+          {label.text}
         </span>
       }
     >

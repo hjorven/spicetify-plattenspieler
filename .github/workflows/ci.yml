@@ -27,5 +27,5 @@ jobs:
             echo "::error::dist/ is outdated. Run 'npm run build' and commit the result."
             exit 1
           fi
-      - name: Shellcheck update.sh
-        run: shellcheck -S warning update.sh
+      - name: Shellcheck
+        run: shellcheck -S warning update.sh install.sh
