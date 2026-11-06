@@ -5,7 +5,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.3.0] – Overhaul
+## [1.0.0] – Complete rewrite
+
+### Changed
+- Source rewritten in TypeScript + JSX under `src/`, split into components, hooks and pure logic modules
+- Build with esbuild into `dist/` (React is taken from `Spicetify.React`, not bundled); `dist/` is committed so installing needs no Node.js
+- `update.sh` runs `npm run check` and installs from `dist/`
+
+### Added
+- Unit tests (vitest) for formatting, settings migration, geometry/RPM, player reading and VU math
+- Focus trap in the settings window
+- CI: typecheck, tests, build and a check that `dist/` is up to date
+
 
 ### Added
 - Settings window (gear icon) with Display / Turntable / About tabs, closable via Esc, X or background click

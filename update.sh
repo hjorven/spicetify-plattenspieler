@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# update.sh – Kopiert die Plattenspieler-App vom Entwicklungsordner
-# ins Spicetify-CustomApps-Verzeichnis, prüft Syntax, legt ein Backup an
-# und wendet Spicetify an.
+# update.sh – Baut die Plattenspieler-App (falls Node vorhanden), kopiert
+# dist/ ins Spicetify-CustomApps-Verzeichnis, legt ein Backup an und wendet
+# Spicetify an.
 #
 # Nutzung:
 #   ./update.sh            # normales Update
@@ -34,24 +34,28 @@ echo "    Quelle:  $SRC_DIR"
 echo "    Ziel:    $DEST_DIR"
 echo
 
-# 1. Syntax-Check
-echo "==> [1/5] Syntax-Check (index.js)"
-if ! command -v node >/dev/null 2>&1; then
-  echo "    WARNUNG: node nicht gefunden, Syntax-Check wird übersprungen." >&2
-else
-  node --check "$SRC_DIR/index.js"
+# 1. Bauen
+echo "==> [1/5] Build (npm run check)"
+if command -v npm >/dev/null 2>&1 && [[ -f "$SRC_DIR/package.json" ]]; then
+  (
+    cd "$SRC_DIR"
+    [[ -d node_modules ]] || npm ci
+    npm run check
+  )
   echo "    OK"
+else
+  echo "    WARNUNG: npm nicht gefunden, verwende das vorhandene dist/." >&2
 fi
 echo
 
 # 2. Pflichtdateien prüfen
 echo "==> [2/5] Prüfe benötigte Dateien"
 for f in manifest.json index.js style.css; do
-  if [[ ! -f "$SRC_DIR/$f" ]]; then
-    echo "    FEHLER: $SRC_DIR/$f fehlt." >&2
+  if [[ ! -f "$SRC_DIR/dist/$f" ]]; then
+    echo "    FEHLER: $SRC_DIR/dist/$f fehlt." >&2
     exit 1
   fi
-  echo "    gefunden: $f"
+  echo "    gefunden: dist/$f"
 done
 echo
 
@@ -69,7 +73,7 @@ echo
 # 4. Dateien kopieren
 echo "==> [4/5] Kopiere Dateien"
 mkdir -p "$DEST_DIR"
-cp "$SRC_DIR/manifest.json" "$SRC_DIR/index.js" "$SRC_DIR/style.css" "$DEST_DIR"/
+cp "$SRC_DIR/dist/manifest.json" "$SRC_DIR/dist/index.js" "$SRC_DIR/dist/style.css" "$DEST_DIR"/
 echo "    Kopiert nach $DEST_DIR"
 echo
 

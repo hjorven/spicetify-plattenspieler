@@ -27,31 +27,60 @@ clickable progress bar, stereo VU meter, and responsive layout.
 
 ## Installation
 
+The ready-built app lives in `dist/`, so no Node.js is needed to install it.
+
 ```bash
 git clone https://github.com/hjorven/spicetify-plattenspieler.git
-mkdir -p ~/.spicetify/CustomApps/plattenspieler
-cp spicetify-plattenspieler/index.js spicetify-plattenspieler/style.css spicetify-plattenspieler/manifest.json \
-   ~/.spicetify/CustomApps/plattenspieler/
-
+mkdir -p "$(dirname "$(spicetify -c)")/CustomApps/plattenspieler"
+cp spicetify-plattenspieler/dist/index.js spicetify-plattenspieler/dist/style.css spicetify-plattenspieler/dist/manifest.json \
+   "$(dirname "$(spicetify -c)")/CustomApps/plattenspieler/"
 spicetify config custom_apps plattenspieler
 spicetify apply
 ```
 
+`spicetify -c` prints the path of your Spicetify config file; the `CustomApps` folder sits next to it
+(usually `~/.config/spicetify/CustomApps` or `~/.spicetify/CustomApps`).
+
 Restart Spotify. The app appears in the sidebar and is accessible at `/plattenspieler`.
 
-## Updates
+## Development
 
-For local development, use the included [`update.sh`](./update.sh).
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for details.
+Requires Node.js 20 or newer.
 
-## Testing
+```bash
+npm ci              # install dev dependencies
+npm run watch       # rebuild dist/ on every change
+npm run check       # typecheck + unit tests + production build
+./update.sh         # check, copy dist/ into Spicetify, back up the old version, spicetify apply
+```
 
-A manual test checklist is available in [TESTING.md](./TESTING.md).
+`update.sh` installs to `~/.spicetify/CustomApps/plattenspieler` by default. Override it with
+`DEST_DIR`, for example:
 
-## Architecture
+```bash
+DEST_DIR="$HOME/.config/spicetify/CustomApps/plattenspieler" ./update.sh
+```
 
-Technical documentation (data flow, geometry formulas, CSS structure, known limitations)
-is in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+Commit the rebuilt `dist/` together with your source changes; CI fails if it is outdated.
+
+### Project structure
+
+```
+src/
+  index.tsx                  entry point, exports render()
+  components/                React components (TSX)
+    RecordPlayer.tsx         page layout
+    Record.tsx, Tonearm.tsx, VuMeter.tsx, TrackInfo.tsx
+    settings/                settings window and its controls
+    ErrorBoundary.tsx
+  hooks/                     usePlayer, useSettings, useTurntableGeometry, useVuLevels
+  lib/                       pure logic without React (tested): format, settings, geometry, player, vu
+  style.css
+test/                        vitest unit tests for src/lib
+dist/                        build output that Spicetify loads
+```
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for details and [TESTING.md](./TESTING.md) for the manual test checklist.
 
 ## Known Limitations
 

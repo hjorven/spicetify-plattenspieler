@@ -2,13 +2,13 @@
 
 Manual checklist to run through after every update.
 
-## 0. Syntax Check
+## 0. Automated Checks
 
 ```bash
-node --check index.js
+npm run check
 ```
 
-- [ ] No errors → proceed
+- [ ] Typecheck, unit tests and build pass → proceed
 - [ ] Errors → fix first
 
 ## 1. App Loads
